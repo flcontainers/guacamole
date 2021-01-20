@@ -9,7 +9,7 @@ POSTGRES_USER=guacamole \
 POSTGRES_DB=guacamole_db
 
 #Add essential packages
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y curl apt-utils postgresql ghostscript
+RUN apt-get update && apt-get install -y curl apt-utils postgresql ghostscript
 
 # Apply the s6-overlay
 
