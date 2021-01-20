@@ -1,3 +1,33 @@
+FROM alpine:latest
+
+ARG APPLICATION="guacamole"
+ARG BUILD_RFC3339="2021-01-20T22:59:00Z"
+ARG REVISION="local"
+ARG DESCRIPTION="Guacamole 1.3.0 on amd64"
+ARG PACKAGE="MaxWaldorf/arm64-guacamole"
+ARG VERSION="amd64"
+
+STOPSIGNAL SIGKILL
+
+LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
+      org.opencontainers.image.created=$BUILD_RFC3339 \
+      org.opencontainers.image.authors="MaxWaldorf,OZNU" \
+      org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
+      org.opencontainers.image.description="${DESCRIPTION}" \
+      org.opencontainers.image.licenses="GPLv3" \
+      org.opencontainers.image.source="https://github.com/${PACKAGE}" \
+      org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.url="https://hub.docker.com/r/${PACKAGE}/"
+
+ENV \
+      APPLICATION="${APPLICATION}" \
+      BUILD_RFC3339="${BUILD_RFC3339}" \
+      REVISION="${REVISION}" \
+      DESCRIPTION="${DESCRIPTION}" \
+      PACKAGE="${PACKAGE}" \
+      VERSION="${VERSION}"
+
 FROM tomcat:jdk15-openjdk-slim-buster
 
 ENV ARCH=amd64 \
