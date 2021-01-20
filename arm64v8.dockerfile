@@ -8,7 +8,7 @@ RUN apk add curl && curl -L ${QEMU_URL} | tar zxvf - -C . --strip-components 1
 FROM tomcat:jdk15-openjdk-slim-buster
 
 ENV ARCH=aarch64 \
-GUAC_VER=1.0.3 \
+GUAC_VER=1.3.0 \
 GUACAMOLE_HOME=/app/guacamole \
 PG_MAJOR=11 \
 PGDATA=/config/postgres \
