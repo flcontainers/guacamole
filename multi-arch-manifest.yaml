@@ -1,9 +1,9 @@
 image: maxwaldorf/guacamole:latest
 manifests:
-  #- image: maxwaldorf/guacamole:amd64
-    #platform:
-      #architecture: amd64
-      #os: linux
+  - image: maxwaldorf/guacamole:amd64
+    platform:
+      architecture: amd64
+      os: linux
   - image: maxwaldorf/guacamole:arm64v8
     platform:
       architecture: arm64
