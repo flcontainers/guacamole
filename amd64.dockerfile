@@ -1,7 +1,7 @@
 FROM tomcat:jdk15-openjdk-slim-buster
 
 ENV ARCH=amd64 \
-GUAC_VER=1.0.3 \
+GUAC_VER=1.3.0 \
 GUACAMOLE_HOME=/app/guacamole \
 PG_MAJOR=11 \
 PGDATA=/config/postgres \
