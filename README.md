@@ -1,4 +1,4 @@
-[![Docker Build Status](https://img.shields.io/docker/build/maxwaldorf/guacamole.svg?label=x64%20build)](https://hub.docker.com/r/maxwaldorf/guacamole/) [![Travis](https://img.shields.io/docker/pulls/maxwaldorf/guacamole.svg)](https://hub.docker.com/r/maxwaldorf/guacamole/)
+[![Docker Automated](https://img.shields.io/docker/automated/maxwaldorf/guacamole)](https://hub.docker.com/r/maxwaldorf/guacamole/) [![Docker Build Status](https://img.shields.io/docker/build/maxwaldorf/guacamole)](https://hub.docker.com/r/maxwaldorf/guacamole/) [![Docker Pulls](https://img.shields.io/docker/pulls/maxwaldorf/guacamole.svg)](https://hub.docker.com/r/maxwaldorf/guacamole/)
 
 # Docker Guacamole
 
@@ -6,7 +6,7 @@
 
 A Docker Container for [Apache Guacamole](https://guacamole.apache.org/), a client-less remote desktop gateway. It supports standard protocols like VNC, RDP, and SSH over HTML5.
 
-This image will run on most platforms that support Docker including Docker for arm64 boards (Raspberry ARMv7+ on an 64bit OS).
+This image will run on most platforms that support Docker including Docker for arm64 boards (Raspberry ARM64v8 on an 64bit OS).
 
 This container runs the guacamole web client, the guacd server and a postgres database.
 
@@ -16,7 +16,7 @@ This container runs the guacamole web client, the guacd server and a postgres da
 docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
-  MaxWaldorf/guacamole
+  maxwaldorf/guacamole
 ```
 
 ## Parameters
@@ -38,7 +38,7 @@ docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
   -e "EXTENSIONS=auth-ldap,auth-duo"
-  oznu/guacamole
+  maxwaldorf/guacamole
 ```
 
 Currently the available extensions are:
