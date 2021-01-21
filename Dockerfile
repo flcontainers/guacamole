@@ -1,4 +1,5 @@
-FROM alpine:latest
+#FROM alpine:latest
+FROM tomcat:jdk15-openjdk-slim-buster
 
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2021-01-20T22:59:00Z"
@@ -28,7 +29,6 @@ ENV \
       PACKAGE="${PACKAGE}" \
       VERSION="${VERSION}"
 
-FROM tomcat:jdk15-openjdk-slim-buster
 
 ENV ARCH=amd64 \
 GUAC_VER=1.3.0 \
