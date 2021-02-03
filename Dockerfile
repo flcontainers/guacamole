@@ -2,11 +2,11 @@
 FROM tomcat:jdk15-openjdk-slim-buster
 
 ARG APPLICATION="guacamole"
-ARG BUILD_RFC3339="2021-01-20T22:59:00Z"
+ARG BUILD_RFC3339="2021-02-03T21:35:00Z"
 ARG REVISION="local"
 ARG DESCRIPTION="Guacamole 1.3.0 on amd64"
 ARG PACKAGE="MaxWaldorf/arm64-guacamole"
-ARG VERSION="1.3.0"
+ARG VERSION="1.3.1"
 
 STOPSIGNAL SIGKILL
 
@@ -39,7 +39,7 @@ POSTGRES_USER=guacamole \
 POSTGRES_DB=guacamole_db
 
 #Add essential packages
-RUN apt-get update && apt-get install -y curl apt-utils postgresql ghostscript
+RUN apt-get update && apt-get install -y curl apt-utils cifs-utils postgresql ghostscript
 
 # Apply the s6-overlay
 
@@ -54,12 +54,6 @@ RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v
 WORKDIR ${GUACAMOLE_HOME}
 
 # Look for debian testing packets
-#RUN touch /etc/apt/apt.conf.d/00default \
-  #&& echo $'APT::Default-Release "buster";' >> /etc/apt/apt.conf.d/00default \
-  #&& touch /etc/apt/preferences.d/00default \
-  #&& echo $'Package: * Pin: release n=buster Pin-Priority: 999\nPackage: * Pin: release n=bullseye Pin-Priority: 650\nPackage: freerdp2-dev libfreerdp-client2-2 Pin>
-  #&& echo "deb http://deb.debian.org/debian bullseye main" >>  /etc/apt/sources.list \
-  #&& echo "deb http://security.debian.org bullseye-security main" >>  /etc/apt/sources.list \
 RUN echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" >> /etc/apt/sources.list
 
 # Install dependencies
@@ -70,8 +64,7 @@ RUN apt-get update && apt-get -t buster-backports install -y \
     libpango1.0-dev freerdp2-dev libfreerdp-client2-2 \
     libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev \
     libpulse-dev libssl-dev libvorbis-dev libwebp-dev \
-  && apt-get autoremove && apt-get autoclean \
-  && rm -rf /var/lib/apt/lists/*
+  && apt-get autoremove && apt-get clean
 
 # Link FreeRDP to where guac expects it to be
 RUN ln -s /usr/local/lib/freerdp /usr/lib/x86_64-linux-gnu/freerdp || exit 0
