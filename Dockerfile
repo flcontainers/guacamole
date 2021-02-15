@@ -64,7 +64,8 @@ RUN apt-get update && apt-get -t buster-backports install -y \
     libpango1.0-dev freerdp2-dev libfreerdp-client2-2 \
     libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev \
     libpulse-dev libssl-dev libvorbis-dev libwebp-dev \
-  && apt-get autoremove && apt-get clean
+  && apt-get autoremove && apt-get clean autoclean \
+  && rm -rf /var/lib/apt/lists/*
 
 # Link FreeRDP to where guac expects it to be
 RUN ln -s /usr/local/lib/freerdp /usr/lib/x86_64-linux-gnu/freerdp || exit 0
