@@ -1,16 +1,13 @@
 name: Docker Image CI
 
-# Controls when the workflow will run
 on:
-  workflow_dispatch
+# Controls when the workflow will run
   push:
-    branches:
-      - 'main'
+    branches: [ main ]
     tags:
       - 'v*.*.*'
   pull_request:
-    branches:
-      - 'main'
+    branches: [ main ]
       
 # permissions are needed if pushing to ghcr.io
 permissions: 
