@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       # Get the repository's code
       - name: Checkout
