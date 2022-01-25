@@ -41,15 +41,8 @@ docker run \
   maxwaldorf/guacamole
 ```
 
-Currently the available extensions are:
-
-* auth-ldap - [LDAP Authentication](https://guacamole.apache.org/doc/gug/ldap-auth.html)
-* auth-duo - [Duo two-factor authentication](https://guacamole.apache.org/doc/gug/duo-auth.html)
-* auth-header - [HTTP header authentication](https://guacamole.apache.org/doc/gug/header-auth.html)
-* auth-cas - [CAS Authentication](https://guacamole.apache.org/doc/gug/cas-auth.html)
-* auth-openid - [OpenID Connect authentication](https://guacamole.apache.org/doc/gug/openid-auth.html)
-* auth-totp - [TOTP two-factor authentication](https://guacamole.apache.org/doc/gug/totp-auth.html)
-* auth-quickconnect - [Ad-hoc connections extension](https://guacamole.apache.org/doc/gug/adhoc-connections.html)
+Check Extensions list here:
+[Guacamole v1.4.0 release notes](https://guacamole.apache.org/releases/1.4.0/)
 
 You should only enable the extensions you require, if an extensions is not configured correctly in the `guacamole.properties` file it may prevent the system from loading. See the [official documentation](https://guacamole.apache.org/doc/gug/) for more details.
 
