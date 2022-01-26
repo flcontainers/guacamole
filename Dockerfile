@@ -7,6 +7,7 @@ ARG REVISION="local"
 ARG DESCRIPTION="Guacamole 1.4.0"
 ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.4.0"
+ARG TARGETPLATFORM
 
 STOPSIGNAL SIGKILL
 
@@ -47,7 +48,8 @@ RUN echo "deb http://deb.debian.org/debian buster-backports main contrib non-fre
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y curl postgresql-${PG_MAJOR}
 
 # Apply the s6-overlay
-RUN export ARCH=$(uname -m); echo $ARCH && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.3/s6-overlay-${ARCH}.tar.gz" \
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; then ARCH=arm; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCH=armhf; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; else ARCH=amd64; fi \
+  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.3/s6-overlay-${ARCH}.tar.gz" \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
   && rm -rf s6-overlay-${ARCH}.tar.gz \
