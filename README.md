@@ -1,4 +1,4 @@
-[![Docker Automated](https://img.shields.io/docker/automated/maxwaldorf/guacamole)](https://hub.docker.com/r/maxwaldorf/guacamole/) [![Docker Build Status](https://img.shields.io/docker/build/maxwaldorf/guacamole)](https://hub.docker.com/r/maxwaldorf/guacamole/) [![Docker Pulls](https://img.shields.io/docker/pulls/maxwaldorf/guacamole.svg)](https://hub.docker.com/r/maxwaldorf/guacamole/)
+[![Docker Image CI](https://github.com/MaxWaldorf/guacamole/actions/workflows/docker-image.yml/badge.svg)](https://github.com/MaxWaldorf/guacamole/actions/workflows/docker-image.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/maxwaldorf/guacamole.svg)](https://hub.docker.com/r/maxwaldorf/guacamole/)
 
 # Docker Guacamole
 
