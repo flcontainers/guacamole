@@ -41,8 +41,21 @@ docker run \
   maxwaldorf/guacamole
 ```
 
-Check Extensions list here:
-[Guacamole v1.4.0 release notes](https://guacamole.apache.org/releases/1.4.0/)
+**Extension List:**
+- auth-duo
+- auth-header
+- auth-jdbc-mysql
+- auth-jdbc-postgresql
+- auth-jdbc-sqlserver
+- auth-json
+- auth-ldap
+- auth-quickconnect
+- auth-sso-openid
+- auth-sso-saml
+- auth-sso-cas
+- auth-totp
+
+More information: [Guacamole v1.4.0 release notes](https://guacamole.apache.org/releases/1.4.0/)
 
 You should only enable the extensions you require, if an extensions is not configured correctly in the `guacamole.properties` file it may prevent the system from loading. See the [official documentation](https://guacamole.apache.org/doc/gug/) for more details.
 

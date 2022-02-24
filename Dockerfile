@@ -12,31 +12,31 @@ ARG TARGETPLATFORM
 STOPSIGNAL SIGKILL
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
-      org.opencontainers.image.created=$BUILD_RFC3339 \
-      org.opencontainers.image.authors="MaxWaldorf,OZNU" \
-      org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
-      org.opencontainers.image.description="${DESCRIPTION}" \
-      org.opencontainers.image.licenses="GPLv3" \
-      org.opencontainers.image.source="https://github.com/${PACKAGE}" \
-      org.opencontainers.image.revision=$REVISION \
-      org.opencontainers.image.version=$VERSION \
-      org.opencontainers.image.url="https://hub.docker.com/r/${PACKAGE}/"
+  org.opencontainers.image.created=$BUILD_RFC3339 \
+  org.opencontainers.image.authors="MaxWaldorf,OZNU" \
+  org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
+  org.opencontainers.image.description="${DESCRIPTION}" \
+  org.opencontainers.image.licenses="GPLv3" \
+  org.opencontainers.image.source="https://github.com/${PACKAGE}" \
+  org.opencontainers.image.revision=$REVISION \
+  org.opencontainers.image.version=$VERSION \
+  org.opencontainers.image.url="https://hub.docker.com/r/${PACKAGE}/"
 
 ENV \
-      APPLICATION="${APPLICATION}" \
-      BUILD_RFC3339="${BUILD_RFC3339}" \
-      REVISION="${REVISION}" \
-      DESCRIPTION="${DESCRIPTION}" \
-      PACKAGE="${PACKAGE}" \
-      VERSION="${VERSION}"
+  APPLICATION="${APPLICATION}" \
+  BUILD_RFC3339="${BUILD_RFC3339}" \
+  REVISION="${REVISION}" \
+  DESCRIPTION="${DESCRIPTION}" \
+  PACKAGE="${PACKAGE}" \
+  VERSION="${VERSION}"
 
-ENV \ 
-GUAC_VER=1.4.0 \
-GUACAMOLE_HOME=/app/guacamole \
-PG_MAJOR=11 \
-PGDATA=/config/postgres \
-POSTGRES_USER=guacamole \
-POSTGRES_DB=guacamole_db
+ENV \
+  GUAC_VER=1.4.0 \
+  GUACAMOLE_HOME=/app/guacamole \
+  PG_MAJOR=11 \
+  PGDATA=/config/postgres \
+  POSTGRES_USER=guacamole \
+  POSTGRES_DB=guacamole_db
 
 #Set working DIR
 WORKDIR ${GUACAMOLE_HOME}
@@ -54,16 +54,16 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPL
   && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
   && rm -rf s6-overlay-${ARCH}.tar.gz \
   && mkdir -p ${GUACAMOLE_HOME} \
-    ${GUACAMOLE_HOME}/lib \
-    ${GUACAMOLE_HOME}/extensions
+  ${GUACAMOLE_HOME}/lib \
+  ${GUACAMOLE_HOME}/extensions
 
 # Install dependencies
 RUN apt-get update && apt-get -t buster-backports install -y \
-    build-essential \
-    libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
-    libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
-    freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev \
-    libssl-dev libvorbis-dev libwebp-dev
+  build-essential \
+  libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
+  libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
+  freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev \
+  libssl-dev libvorbis-dev libwebp-dev
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
@@ -87,16 +87,47 @@ RUN set -x \
   && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/schema ${GUACAMOLE_HOME}/ \
   && rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz
 
-# Add optional extensions
+###############################################################################
+################################# EXTENSIONS ##################################
+###############################################################################
+
+RUN mkdir ${GUACAMOLE_HOME}/extensions-available
+
+# Download all extensions
 RUN set -xe \
-  && mkdir ${GUACAMOLE_HOME}/extensions-available \
-  && for i in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp; do \
-    echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${i}-${GUAC_VER}.tar.gz" \
-    && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${i}-${GUAC_VER}.tar.gz" \
-    && tar -xzf guacamole-${i}-${GUAC_VER}.tar.gz \
-    && cp guacamole-${i}-${GUAC_VER}/guacamole-${i}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
-    && rm -rf guacamole-${i}-${GUAC_VER} guacamole-${i}-${GUAC_VER}.tar.gz \
+  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp; do \
+  echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
+  && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
+  && tar -xzf guacamole-${ext_name}-${GUAC_VER}.tar.gz \
   ;done
+
+# Copy standalone extensions over to extensions-available folder
+RUN set -xe \
+  && for ext_name in auth-duo auth-header auth-json auth-ldap auth-quickconnect auth-totp; do \
+  cp guacamole-${ext_name}-${GUAC_VER}/guacamole-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  ;done
+
+# Copy SSO extensions over to extensions-available folder
+RUN set -xe \
+  && for ext_name in openid saml cas; do \
+  cp guacamole-auth-sso-${GUAC_VER}/${ext_name}/guacamole-auth-sso-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  ;done
+
+# Copy JDBC extensions over to extensions-available folder
+RUN set -xe \
+  && for ext_name in mysql postgresql sqlserver; do \
+  cp guacamole-auth-jdbc-${GUAC_VER}/${ext_name}/guacamole-auth-jdbc-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  ;done
+
+# Clear all extensions leftovers
+RUN set -xe \
+  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp; do \
+  rm -rf guacamole-${ext_name}-${GUAC_VER} guacamole-${ext_name}-${GUAC_VER}.tar.gz \
+  ;done
+
+###############################################################################
+###############################################################################
+###############################################################################
 
 # Purge BUild packages
 RUN apt-get purge -y build-essential \
