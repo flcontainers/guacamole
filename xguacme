@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+function build_guacamole()
+{
+	local	dir='config-guacamole';
+	local	container_name='guacamole-stu';
+	local	git_code='guacamole';
+
+	#
+	#	Only execute stuart's private functions if they exist
+	#	and in a specific order
+	#
+	local	my_functions=('clsall' 'docker_rm_all');
+	for my_function in ${my_functions[*]};
+	do
+		[[ -n "$(typeset -f ${my_function})" ]] && ${my_function};
+	done;
+
+	[[ ! -d ${dir} ]] && mkdir ${dir};
+#	[[ "$(uname -m)" == "x86_64" ]] && { local ARCH="amd64"; local FROM="library"; };
+#	[[ "$(uname -m)" =~ "arm"    ]] && { local ARCH="armhf"; local FROM="arm32v5"; };
+
+#	  --build-arg ARCH=${ARCH:-"amd64"}		\
+#	  --build-arg FROM=${FROM:-"library"}		\
+	docker build					\
+	  --tag ${container_name}			\
+	  ./${git_code}					\
+	&& docker run -d -p 8080:8080 -v ${dir}:/config ${container_name};
+};
+
+time build_guacamole;
+
