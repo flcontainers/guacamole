@@ -1,5 +1,30 @@
+#
+#	Follows hereupon an enumeration of changes and proposed changes.
+#	All proposed changes (C)(P) Stuart Blake Tener and licensed via GPLv3
+#
+# 20 MAR 2022 (changes):
+#
+#	1) added support for changing "FROM" via build argument
+#	2) added support for setting forth the postgresql version via build argument
+#	3) added support for assuring that the Guacamole version already able to supplied
+#	via build argument is propogated into the environment variable GUAC_VER.
+#	4) added SHELL entry to assure that bash is used vice sh
+#	5) Updated the tomcat to jre11-openjdk-bullseye and postgresql to v13
+#
+# 20 MAR 2022 (todo):
+#
+#	1) The documentation states that ARM 32-bit is not supported, however, the code in
+#	in the repo suggests otherwise. Need to perform some tests to ascertain if ARMv7
+#	architecture would build and function properly.
+#	2) What would be requisite to effectuate using MySQL instead of postgresql?
+#	MySQL seems a better choice as far more Guacamole users are ostensibly familiar with it.
+#
+
 # Select BASE
-FROM tomcat:jdk15-openjdk-slim-buster
+ARG FROM="tomcat:jre11-openjdk-bullseye"
+FROM ${FROM}
+
+SHELL ["/bin/bash", "-c"]
 
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2022-01-25T12:00:00Z"
@@ -8,6 +33,7 @@ ARG DESCRIPTION="Guacamole 1.4.0"
 ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.4.0"
 ARG TARGETPLATFORM
+ARG PG_MAJOR="13"
 
 STOPSIGNAL SIGKILL
 
@@ -31,9 +57,9 @@ ENV \
   VERSION="${VERSION}"
 
 ENV \
-  GUAC_VER=1.4.0 \
+  GUAC_VER=${VERSION} \
   GUACAMOLE_HOME=/app/guacamole \
-  PG_MAJOR=11 \
+  PG_MAJOR=${PG_MAJOR} \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
@@ -42,7 +68,7 @@ ENV \
 WORKDIR ${GUACAMOLE_HOME}
 
 # Look for debian testing packets
-RUN echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" >> /etc/apt/sources.list
+RUN echo "deb http://deb.debian.org/debian bullseye-backports main contrib non-free" >> /etc/apt/sources.list
 
 #Add essential packages
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y curl postgresql-${PG_MAJOR}
@@ -58,7 +84,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPL
   ${GUACAMOLE_HOME}/extensions
 
 # Install dependencies
-RUN apt-get update && apt-get -t buster-backports install -y \
+RUN apt-get update && apt-get -t bullseye-backports install -y \
   build-essential \
   libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
   libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
