@@ -11,14 +11,6 @@
 #	4) added SHELL entry to assure that bash is used vice sh
 #	5) Updated the tomcat to jre11-openjdk-bullseye and postgresql to v13
 #
-# 20 MAR 2022 (todo):
-#
-#	1) The documentation states that ARM 32-bit is not supported, however, the code in
-#	in the repo suggests otherwise. Need to perform some tests to ascertain if ARMv7
-#	architecture would build and function properly.
-#	2) What would be requisite to effectuate using MySQL instead of postgresql?
-#	MySQL seems a better choice as far more Guacamole users are ostensibly familiar with it.
-#
 
 # Select BASE
 ARG FROM="tomcat:jre11-openjdk-bullseye"
