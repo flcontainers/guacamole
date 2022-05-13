@@ -1,5 +1,5 @@
 # Select BASE
-FROM tomcat:jre11-openjdk-bullseye
+FROM tomcat:jre8-openjdk-slim-bullseye
 
 SHELL ["/bin/bash", "-c"]
 
@@ -11,6 +11,8 @@ ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.4.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
+# Do not require interaction during build
+ARG DEBIAN_FRONTEND=noninteractive
 
 STOPSIGNAL SIGKILL
 
