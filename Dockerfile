@@ -1,5 +1,5 @@
 # Select BASE
-FROM tomcat:jre8-openjdk-slim-bullseye
+FROM tomcat:8.5-jdk8-openjdk-slim-bullseye
 
 SHELL ["/bin/bash", "-c"]
 
