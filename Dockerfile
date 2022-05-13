@@ -1,5 +1,7 @@
 # Select BASE
-FROM tomcat:jdk15-openjdk-slim-buster
+FROM tomcat:8.5-jdk8-openjdk-slim-bullseye
+
+SHELL ["/bin/bash", "-c"]
 
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2022-01-25T12:00:00Z"
@@ -8,6 +10,9 @@ ARG DESCRIPTION="Guacamole 1.4.0"
 ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.4.0"
 ARG TARGETPLATFORM
+ARG PG_MAJOR="13"
+# Do not require interaction during build
+ARG DEBIAN_FRONTEND=noninteractive
 
 STOPSIGNAL SIGKILL
 
@@ -31,9 +36,9 @@ ENV \
   VERSION="${VERSION}"
 
 ENV \
-  GUAC_VER=1.4.0 \
+  GUAC_VER=${VERSION} \
   GUACAMOLE_HOME=/app/guacamole \
-  PG_MAJOR=11 \
+  PG_MAJOR=${PG_MAJOR} \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
@@ -42,10 +47,10 @@ ENV \
 WORKDIR ${GUACAMOLE_HOME}
 
 # Look for debian testing packets
-RUN echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" >> /etc/apt/sources.list
+RUN echo "deb http://deb.debian.org/debian bullseye-backports main contrib non-free" >> /etc/apt/sources.list
 
 #Add essential packages
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y curl postgresql-${PG_MAJOR}
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y curl postgresql-${PG_MAJOR} ghostscript
 
 # Apply the s6-overlay
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; then ARCH=arm; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCH=armhf; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; else ARCH=amd64; fi \
@@ -58,7 +63,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPL
   ${GUACAMOLE_HOME}/extensions
 
 # Install dependencies
-RUN apt-get update && apt-get -t buster-backports install -y \
+RUN apt-get update && apt-get -t bullseye-backports install -y \
   build-essential \
   libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
   libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \

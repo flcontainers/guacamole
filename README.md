@@ -2,6 +2,10 @@
 
 # Docker Guacamole
 
+⚠️ **Starting version 1.4.2, compatibility with previous versions is broken due to Postgresql upgrade from 11 to 13!** <br />
+ℹ️ Make sure to backup "guacamole_db" in postgres before upgrade to inject it later... <br />
+<br />
+<br />
 **Disclaimer:** This work is based on the work of: https://github.com/oznu/docker-guacamole
 
 A Docker Container for [Apache Guacamole](https://guacamole.apache.org/), a client-less remote desktop gateway. It supports standard protocols like VNC, RDP, and SSH over HTML5.
