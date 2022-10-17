@@ -53,7 +53,7 @@ RUN echo "deb http://deb.debian.org/debian bullseye-backports main contrib non-f
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y curl postgresql-${PG_MAJOR} ghostscript
 
 #Add Fonts as requested by users
-RUN apt-get install -y ttf-liberation
+RUN apt-get install -y ttf-mscorefonts-installer fonts-spleen
 
 # Apply the s6-overlay
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; then ARCH=arm; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCH=armhf; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; else ARCH=amd64; fi \
