@@ -6,6 +6,10 @@ on:
     branches: [ main ]
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
       
 # permissions are needed if pushing to ghcr.io
 permissions: 
