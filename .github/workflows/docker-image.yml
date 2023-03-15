@@ -35,7 +35,7 @@ jobs:
           
       - name: Docker meta
         id: guac
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           # list of Docker images to use as base name for tags
           images: |
