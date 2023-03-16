@@ -83,13 +83,13 @@ elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
   then S6_ARCH=powerpc64le; \
 else S6_ARCH=x86_64; \
 fi \
-  && curl -SLo /tmp/s6-overlay-noarch.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" \
+  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" > /tmp/s6-overlay-noarch.tar.xz \
   && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
-  && curl -SLo /tmp/s6-overlay-${S6_ARCH}.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" \
+  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" > /tmp/s6-overlay-${S6_ARCH}.tar.xz \
   && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz \
-  && curl -SLo /tmp/s6-overlay-symlinks-noarch.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz" \
+  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz" > /tmp/s6-overlay-symlinks-noarch.tar.xz \
   && tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz \
-  && curl -SLo /tmp/syslogd-overlay-noarch.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz" \
+  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz" > /tmp/syslogd-overlay-noarch.tar.xz \
   && tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz
 
 # Create Required Directories for Guacamole
@@ -123,8 +123,7 @@ RUN mkdir ${GUACAMOLE_HOME}/extensions-available
 # Download all extensions
 RUN set -xe \
   && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp vault history-recording-storage; do \
-  echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
-  && curl -SLo /tmp/guacamole-${ext_name}-${GUAC_VER}.tar.gz "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
+  curl -SL "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" > /tmp/guacamole-${ext_name}-${GUAC_VER}.tar.gz \
   && tar -xzf /tmp/guacamole-${ext_name}-${GUAC_VER}.tar.gz \
   ;done
 
