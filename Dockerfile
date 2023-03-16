@@ -12,7 +12,6 @@ ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
 ARG S6_OVERLAY_VERSION="3.1.4.1"
-ARG S6_ARCH
 # Do not require interaction during build
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -49,20 +48,6 @@ ENV \
 # Set working DIR
 WORKDIR ${GUACAMOLE_HOME}
 
-# Platform S6-Overlay
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
-  then S6_ARCH=x86_64; \
-elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; \
-  then S6_ARCH=arm; \
-elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; \
-  then S6_ARCH=armhf; \
-elif [ "$TARGETPLATFORM" = "linux/arm64" ]; \
-  then S6_ARCH=aarch64; \
-elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
-  then S6_ARCH=powerpc64le; \
-else S6_ARCH=x86_64; \
-fi
-
 # Display variables (Test)
 RUN echo "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" \
 echo "S6-overlay Architecture S6_ARCH=${S6_ARCH}"
@@ -86,7 +71,19 @@ RUN apt-get install -y \
   freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev libssl-dev libvorbis-dev libwebp-dev
 
 # Apply the s6-overlay
-RUN curl -SL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz > /tmp/s6-overlay-noarch.tar.xz \
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
+  then S6_ARCH=x86_64; \
+elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; \
+  then S6_ARCH=arm; \
+elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; \
+  then S6_ARCH=armhf; \
+elif [ "$TARGETPLATFORM" = "linux/arm64" ]; \
+  then S6_ARCH=aarch64; \
+elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
+  then S6_ARCH=powerpc64le; \
+else S6_ARCH=x86_64; \
+fi \
+  && curl -SL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz > /tmp/s6-overlay-noarch.tar.xz \
   && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
   && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" > /tmp/s6-overlay-${S6_ARCH}.tar.xz \
   && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz
