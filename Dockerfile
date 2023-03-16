@@ -11,7 +11,7 @@ ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
-ARG S6_OVERLAY_VERSION="v3.1.4.1"
+ARG S6_OVERLAY_VERSION="3.1.4.1"
 ARG S6_ARCH
 # Do not require interaction during build
 ARG DEBIAN_FRONTEND=noninteractive
@@ -36,8 +36,7 @@ ENV \
   DESCRIPTION="${DESCRIPTION}" \
   PACKAGE="${PACKAGE}" \
   VERSION="${VERSION}" \
-  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}" \
-  S6_ARCH="${S6_ARCH}"
+  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}"
 
 ENV \
   GUAC_VER=${VERSION} \
@@ -50,7 +49,7 @@ ENV \
 # Set working DIR
 WORKDIR ${GUACAMOLE_HOME}
 
-# Platform Testing
+# Platform S6-Overlay
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
   then S6_ARCH=x86_64; \
 elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; \
@@ -79,24 +78,23 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y xz-utils cur
 #Add Fonts as requested by users
 RUN apt-get install -y fonts-spleen fonty-rg
 
-# Apply the s6-overlay
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz
-
-# Create Required Directories for Guacamole
-  RUN mkdir -p ${GUACAMOLE_HOME} \
-  ${GUACAMOLE_HOME}/lib \
-  ${GUACAMOLE_HOME}/extensions
-
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get install -y \
   build-essential \
   libcairo2-dev libjpeg-turbo8-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
   libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
-  freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev \
-  libssl-dev libvorbis-dev libwebp-dev
+  freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev libssl-dev libvorbis-dev libwebp-dev
+
+# Apply the s6-overlay
+RUN curl -SL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz > /tmp/s6-overlay-noarch.tar.xz \
+  && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
+  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" > /tmp/s6-overlay-${S6_ARCH}.tar.xz \
+  && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz
+
+# Create Required Directories for Guacamole
+RUN mkdir -p ${GUACAMOLE_HOME} \
+  ${GUACAMOLE_HOME}/lib \
+  ${GUACAMOLE_HOME}/extensions
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
