@@ -12,6 +12,7 @@ ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
 ARG S6_OVERLAY_VERSION="v3.1.4.1"
+ARG S6_ARCH
 # Do not require interaction during build
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -34,7 +35,9 @@ ENV \
   REVISION="${REVISION}" \
   DESCRIPTION="${DESCRIPTION}" \
   PACKAGE="${PACKAGE}" \
-  VERSION="${VERSION}"
+  VERSION="${VERSION}" \
+  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}" \
+  S6_ARCH="${S6_ARCH}"
 
 ENV \
   GUAC_VER=${VERSION} \
@@ -49,21 +52,21 @@ WORKDIR ${GUACAMOLE_HOME}
 
 # Platform Testing
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
-  then ARCH=x86_64; \
+  then S6_ARCH=x86_64; \
 elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; \
-  then ARCH=arm; \
+  then S6_ARCH=arm; \
 elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; \
-  then ARCH=armhf; \
+  then S6_ARCH=armhf; \
 elif [ "$TARGETPLATFORM" = "linux/arm64" ]; \
-  then ARCH=aarch64; \
+  then S6_ARCH=aarch64; \
 elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
-  then ARCH=powerpc64le; \
-else ARCH=x86_64; \
+  then S6_ARCH=powerpc64le; \
+else S6_ARCH=x86_64; \
 fi
 
 # Display variables (Test)
 RUN echo "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" \
-echo "S6-overlay ARCH=${ARCH}"
+echo "S6-overlay Architecture S6_ARCH=${S6_ARCH}"
 
 # Add support for Postgresql 13
 RUN apt-get update && apt-get install -y curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
@@ -79,8 +82,8 @@ RUN apt-get install -y fonts-spleen fonty-rg
 # Apply the s6-overlay
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${ARCH}.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-${ARCH}.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz
 
 # Create Required Directories for Guacamole
   RUN mkdir -p ${GUACAMOLE_HOME} \
