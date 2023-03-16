@@ -47,8 +47,7 @@ ENV \
 WORKDIR ${GUACAMOLE_HOME}
 
 # Display variables (Test)
-RUN echo "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" \
-echo "S6-overlay Architecture S6_ARCH=${S6_ARCH}"
+RUN echo "I'm building for TARGETPLATFORM=${TARGETPLATFORM}"
 
 # Add support for Postgresql 13
 RUN apt-get update && apt-get install -y curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
