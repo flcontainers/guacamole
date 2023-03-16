@@ -123,32 +123,38 @@ RUN mkdir ${GUACAMOLE_HOME}/extensions-available
 # Download all extensions
 RUN set -xe \
   && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp vault history-recording-storage; do \
-  curl -SL "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" > /tmp/guacamole-${ext_name}-${GUAC_VER}.tar.gz \
-  && tar -xzf /tmp/guacamole-${ext_name}-${GUAC_VER}.tar.gz \
+  curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
+  && tar -xzf guacamole-${ext_name}-${GUAC_VER}.tar.gz \
   ;done
 
 # Copy standalone extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in auth-duo auth-header auth-json auth-ldap auth-quickconnect auth-totp history-recording-storage; do \
-  cp /tmp/guacamole-${ext_name}-${GUAC_VER}/guacamole-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp guacamole-${ext_name}-${GUAC_VER}/guacamole-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
 # Copy SSO extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in openid saml cas; do \
-  cp /tmp/guacamole-auth-sso-${GUAC_VER}/${ext_name}/guacamole-auth-sso-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp guacamole-auth-sso-${GUAC_VER}/${ext_name}/guacamole-auth-sso-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
 # Copy JDBC extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in mysql postgresql sqlserver; do \
-  cp /tmp/guacamole-auth-jdbc-${GUAC_VER}/${ext_name}/guacamole-auth-jdbc-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp guacamole-auth-jdbc-${GUAC_VER}/${ext_name}/guacamole-auth-jdbc-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
 # Copy vault extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in ksm; do \
-  cp /tmp/guacamole-vault-${GUAC_VER}/${ext_name}/guacamole-vault-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp guacamole-vault-${GUAC_VER}/${ext_name}/guacamole-vault-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  ;done
+
+# Clear all extensions leftovers
+RUN set -xe \
+  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp vault history-recording-storage; do \
+  rm -rf guacamole-${ext_name}-${GUAC_VER} guacamole-${ext_name}-${GUAC_VER}.tar.gz \
   ;done
 
 # Clear all leftovers
