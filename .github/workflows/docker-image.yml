@@ -51,7 +51,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.guac.outputs.tags }}
           labels: ${{ steps.guac.outputs.labels }}
