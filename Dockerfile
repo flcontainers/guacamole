@@ -48,8 +48,8 @@ WORKDIR ${GUACAMOLE_HOME}
 
 # Add support for Postgresql 13
 RUN apt-get update && apt-get install -y curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
-RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | sudo tee  /etc/apt/sources.list.d/pgdg.list
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee  /etc/apt/sources.list.d/pgdg.list
 
 # Install initial components
 RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y xz-utils curl postgresql-${PG_MAJOR} ghostscript
