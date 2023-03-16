@@ -58,10 +58,10 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y xz-utils cur
 RUN apt-get install -y fonts-spleen fonty-rg
 
 # Apply the s6-overlay
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; then ARCH=arm; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCH=armhf; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; else ARCH=amd64; fi \
+RUN if [ $TARGETPLATFORM == 'linux/amd64' ]; then ARCH=amd64; elif [ $TARGETPLATFORM == 'linux/arm/v6' ]; then ARCH=arm; elif [ $TARGETPLATFORM == 'linux/arm/v7' ]; then ARCH=armhf; elif [ $TARGETPLATFORM == 'linux/arm64' ]; then ARCH=aarch64; else ARCH=amd64; fi \
   && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v3.1.4.1/s6-overlay-${ARCH}.tar.xz" \
-  && tar -xvf s6-overlay-${ARCH}.tar.xz -C / \
-  && tar -xvf s6-overlay-${ARCH}.tar.xz -C /usr ./bin \
+  && tar -xf s6-overlay-${ARCH}.tar.xz -C / \
+  && tar -xf s6-overlay-${ARCH}.tar.xz -C /usr ./bin \
   && rm -rf s6-overlay-${ARCH}.tar.xz \
   && mkdir -p ${GUACAMOLE_HOME} \
   ${GUACAMOLE_HOME}/lib \
