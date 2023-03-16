@@ -83,10 +83,14 @@ elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
   then S6_ARCH=powerpc64le; \
 else S6_ARCH=x86_64; \
 fi \
-  && curl -SL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz > /tmp/s6-overlay-noarch.tar.xz \
+  && curl -SLo /tmp/s6-overlay-noarch.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" \
   && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" > /tmp/s6-overlay-${S6_ARCH}.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz
+  && curl -SLo /tmp/s6-overlay-${S6_ARCH}.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" \
+  && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz \
+  && curl -SLo /tmp/s6-overlay-symlinks-noarch.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz" \
+  && tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz \
+  && curl -SLo /tmp/syslogd-overlay-noarch.tar.xz "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz" \
+  && tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz
 
 # Create Required Directories for Guacamole
 RUN mkdir -p ${GUACAMOLE_HOME} \
@@ -120,39 +124,36 @@ RUN mkdir ${GUACAMOLE_HOME}/extensions-available
 RUN set -xe \
   && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp vault history-recording-storage; do \
   echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
-  && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
-  && tar -xzf guacamole-${ext_name}-${GUAC_VER}.tar.gz \
+  && curl -SLo /tmp/guacamole-${ext_name}-${GUAC_VER}.tar.gz "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
+  && tar -xzf /tmp/guacamole-${ext_name}-${GUAC_VER}.tar.gz \
   ;done
 
 # Copy standalone extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in auth-duo auth-header auth-json auth-ldap auth-quickconnect auth-totp history-recording-storage; do \
-  cp guacamole-${ext_name}-${GUAC_VER}/guacamole-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp /tmp/guacamole-${ext_name}-${GUAC_VER}/guacamole-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
 # Copy SSO extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in openid saml cas; do \
-  cp guacamole-auth-sso-${GUAC_VER}/${ext_name}/guacamole-auth-sso-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp /tmp/guacamole-auth-sso-${GUAC_VER}/${ext_name}/guacamole-auth-sso-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
 # Copy JDBC extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in mysql postgresql sqlserver; do \
-  cp guacamole-auth-jdbc-${GUAC_VER}/${ext_name}/guacamole-auth-jdbc-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp /tmp/guacamole-auth-jdbc-${GUAC_VER}/${ext_name}/guacamole-auth-jdbc-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
 # Copy vault extensions over to extensions-available folder
 RUN set -xe \
   && for ext_name in ksm; do \
-  cp guacamole-vault-${GUAC_VER}/${ext_name}/guacamole-vault-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  cp /tmp/guacamole-vault-${GUAC_VER}/${ext_name}/guacamole-vault-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
-# Clear all extensions leftovers
-RUN set -xe \
-  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp history-recording-storage; do \
-  rm -rf guacamole-${ext_name}-${GUAC_VER} guacamole-${ext_name}-${GUAC_VER}.tar.gz \
-  ;done
+# Clear all leftovers
+RUN rm -rf /tmp
 
 ###############################################################################
 ###############################################################################
@@ -169,6 +170,6 @@ ENV GUACAMOLE_HOME=/config/guacamole
 
 WORKDIR /config
 
-COPY root /
+COPY rootfs /
 
 ENTRYPOINT [ "/init" ]

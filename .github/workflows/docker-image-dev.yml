@@ -38,7 +38,7 @@ jobs:
           
       - name: Docker meta
         id: guac
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           # list of Docker images to use as base name for tags
           images: |
@@ -51,10 +51,10 @@ jobs:
             latest=false
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.guac.outputs.tags }}
           labels: ${{ steps.guac.outputs.labels }}
