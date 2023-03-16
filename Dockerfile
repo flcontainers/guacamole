@@ -1,14 +1,14 @@
 # Select BASE
-FROM tomcat:8.5-jdk8-openjdk-slim-bullseye
+FROM tomcat:9-jdk8
 
 SHELL ["/bin/bash", "-c"]
 
 ARG APPLICATION="guacamole"
-ARG BUILD_RFC3339="2022-01-25T12:00:00Z"
+ARG BUILD_RFC3339="2023-03-16T15:00:00Z"
 ARG REVISION="local"
-ARG DESCRIPTION="Guacamole 1.4.0"
+ARG DESCRIPTION="Guacamole 1.5.0"
 ARG PACKAGE="MaxWaldorf/guacamole"
-ARG VERSION="1.4.0"
+ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
 # Do not require interaction during build
@@ -18,7 +18,7 @@ STOPSIGNAL SIGKILL
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
   org.opencontainers.image.created=$BUILD_RFC3339 \
-  org.opencontainers.image.authors="MaxWaldorf,OZNU" \
+  org.opencontainers.image.authors="MaxWaldorf" \
   org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
   org.opencontainers.image.description="${DESCRIPTION}" \
   org.opencontainers.image.licenses="GPLv3" \
@@ -43,32 +43,34 @@ ENV \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
 
-#Set working DIR
+# Set working DIR
 WORKDIR ${GUACAMOLE_HOME}
 
-# Look for debian testing packets
-RUN echo "deb http://deb.debian.org/debian bullseye-backports main contrib non-free" >> /etc/apt/sources.list
+# Add support for Postgresql 13
+RUN sudo apt update && sudo apt install curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
+RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | sudo tee  /etc/apt/sources.list.d/pgdg.list
 
-#Add essential packages
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y curl postgresql-${PG_MAJOR} ghostscript
+# Install initial components
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y xz-utils curl postgresql-${PG_MAJOR} ghostscript
 
 #Add Fonts as requested by users
 RUN apt-get install -y fonts-spleen fonty-rg
 
 # Apply the s6-overlay
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; then ARCH=arm; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCH=armhf; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; else ARCH=amd64; fi \
-  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.3/s6-overlay-${ARCH}.tar.gz" \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
-  && rm -rf s6-overlay-${ARCH}.tar.gz \
+  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v3.1.4.1/s6-overlay-${ARCH}.tar.xz" \
+  && tar -xzf s6-overlay-${ARCH}.tar.xz -C / \
+  && tar -xzf s6-overlay-${ARCH}.tar.xz -C /usr ./bin \
+  && rm -rf s6-overlay-${ARCH}.tar.xz \
   && mkdir -p ${GUACAMOLE_HOME} \
   ${GUACAMOLE_HOME}/lib \
   ${GUACAMOLE_HOME}/extensions
 
 # Install dependencies
-RUN apt-get update && apt-get -t bullseye-backports install -y \
+RUN apt-get update && apt-get install -y \
   build-essential \
-  libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
+  libcairo2-dev libjpeg-turbo8-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
   libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
   freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev \
   libssl-dev libvorbis-dev libwebp-dev
@@ -88,7 +90,7 @@ RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamo
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.3.1.jar "https://jdbc.postgresql.org/download/postgresql-42.3.1.jar" \
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.5.4.jar "https://jdbc.postgresql.org/download/postgresql-42.5.4.jar" \
   && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
   && tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
   && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
@@ -137,7 +139,7 @@ RUN set -xe \
 ###############################################################################
 ###############################################################################
 
-# Purge BUild packages
+# Purge Build packages
 RUN apt-get purge -y build-essential \
   && apt-get autoremove -y && apt-get autoclean \
   && rm -rf /var/lib/apt/lists/*
