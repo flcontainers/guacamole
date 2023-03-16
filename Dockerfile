@@ -11,6 +11,7 @@ ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
+ARG S6_OVERLAY_VERSION="v3.1.4.1"
 # Do not require interaction during build
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -46,6 +47,24 @@ ENV \
 # Set working DIR
 WORKDIR ${GUACAMOLE_HOME}
 
+# Platform Testing
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
+  then ARCH=x86_64; \
+elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; \
+  then ARCH=arm; \
+elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; \
+  then ARCH=armhf; \
+elif [ "$TARGETPLATFORM" = "linux/arm64" ]; \
+  then ARCH=aarch64; \
+elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
+  then ARCH=powerpc64le; \
+else ARCH=x86_64; \
+fi
+
+# Display variables (Test)
+RUN echo "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" \
+echo "S6-overlay ARCH=${ARCH}"
+
 # Add support for Postgresql 13
 RUN apt-get update && apt-get install -y curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null
@@ -58,16 +77,13 @@ RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y xz-utils cur
 RUN apt-get install -y fonts-spleen fonty-rg
 
 # Apply the s6-overlay
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=x86_64; elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; then ARCH=arm; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCH=armhf; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; else ARCH=x86_64; fi
-RUN echo "I'm building for TARGETPLATFORM=${TARGETPLATFORM}"
-RUN echo "S6-overlay ARCH=${ARCH}"
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${ARCH}.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-${ARCH}.tar.xz
 
-# Apply the s6-overlay
-RUN curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v3.1.4.1/s6-overlay-${ARCH}.tar.xz"
-RUN tar -xf s6-overlay-${ARCH}.tar.xz -C / \
-  && tar -xf s6-overlay-${ARCH}.tar.xz -C /usr ./bin \
-  && rm -rf s6-overlay-${ARCH}.tar.xz \
-  && mkdir -p ${GUACAMOLE_HOME} \
+# Create Required Directories for Guacamole
+  RUN mkdir -p ${GUACAMOLE_HOME} \
   ${GUACAMOLE_HOME}/lib \
   ${GUACAMOLE_HOME}/extensions
 
@@ -94,12 +110,7 @@ RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamo
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.5.4.jar "https://jdbc.postgresql.org/download/postgresql-42.5.4.jar" \
-  && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
-  && tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
-  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
-  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/schema ${GUACAMOLE_HOME}/ \
-  && rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.5.4.jar "https://jdbc.postgresql.org/download/postgresql-42.5.4.jar"
 
 ###############################################################################
 ################################# EXTENSIONS ##################################
@@ -109,7 +120,7 @@ RUN mkdir ${GUACAMOLE_HOME}/extensions-available
 
 # Download all extensions
 RUN set -xe \
-  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp; do \
+  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp vault history-recording-storage; do \
   echo "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
   && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${ext_name}-${GUAC_VER}.tar.gz" \
   && tar -xzf guacamole-${ext_name}-${GUAC_VER}.tar.gz \
@@ -117,7 +128,7 @@ RUN set -xe \
 
 # Copy standalone extensions over to extensions-available folder
 RUN set -xe \
-  && for ext_name in auth-duo auth-header auth-json auth-ldap auth-quickconnect auth-totp; do \
+  && for ext_name in auth-duo auth-header auth-json auth-ldap auth-quickconnect auth-totp history-recording-storage; do \
   cp guacamole-${ext_name}-${GUAC_VER}/guacamole-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
@@ -133,9 +144,15 @@ RUN set -xe \
   cp guacamole-auth-jdbc-${GUAC_VER}/${ext_name}/guacamole-auth-jdbc-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
   ;done
 
+# Copy vault extensions over to extensions-available folder
+RUN set -xe \
+  && for ext_name in ksm; do \
+  cp guacamole-vault-${GUAC_VER}/${ext_name}/guacamole-vault-${ext_name}-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions-available/ \
+  ;done
+
 # Clear all extensions leftovers
 RUN set -xe \
-  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp; do \
+  && for ext_name in auth-duo auth-header auth-jdbc auth-json auth-ldap auth-quickconnect auth-sso auth-totp history-recording-storage; do \
   rm -rf guacamole-${ext_name}-${GUAC_VER} guacamole-${ext_name}-${GUAC_VER}.tar.gz \
   ;done
 
