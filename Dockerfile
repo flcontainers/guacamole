@@ -172,6 +172,4 @@ WORKDIR /config
 
 COPY rootfs /
 
-EXPOSE 8080
-
 ENTRYPOINT [ "/init" ]
