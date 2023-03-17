@@ -48,7 +48,7 @@ jobs:
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule,pattern=nightly
-            type=raw,value=beta
+            type=raw,value=nightly
           flavor: |
             latest=false
 
