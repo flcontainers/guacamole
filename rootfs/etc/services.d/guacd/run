@@ -1,4 +1,4 @@
-#!/command/with-contenv bash
+#!/usr/bin/with-contenv bash
 
 echo "Starting guacamole guacd..."
 s6-setuidgid root guacd -b 0.0.0.0 -f

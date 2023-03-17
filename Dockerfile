@@ -9,7 +9,7 @@ ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
-ARG S6_OVERLAY_VERSION="3.1.4.1"
+ARG S6_OVERLAY_VERSION="2.2.0.3"
 # Do not require interaction during build
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -70,7 +70,7 @@ RUN apt-get install -y \
 
 # Apply the s6-overlay
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
-  then S6_ARCH=x86_64; \
+  then S6_ARCH=amd64; \
 elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; \
   then S6_ARCH=arm; \
 elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; \
@@ -79,16 +79,12 @@ elif [ "$TARGETPLATFORM" = "linux/arm64" ]; \
   then S6_ARCH=aarch64; \
 elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
   then S6_ARCH=powerpc64le; \
-else S6_ARCH=x86_64; \
+else S6_ARCH=amd64; \
 fi \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" > /tmp/s6-overlay-noarch.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" > /tmp/s6-overlay-${S6_ARCH}.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz" > /tmp/s6-overlay-symlinks-noarch.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz
-  #&& curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz" > /tmp/syslogd-overlay-noarch.tar.xz \
-  #&& tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz
+  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${ARCH}.tar.gz" \
+  && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
+  && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
+  && rm -rf s6-overlay-${ARCH}.tar.gz
 
 # Create Required Directories for Guacamole
 RUN mkdir -p ${GUACAMOLE_HOME} \
