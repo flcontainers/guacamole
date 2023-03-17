@@ -1,7 +1,7 @@
 # Select BASE
 FROM tomcat:9-jdk8
 
-SHELL ["/bin/sh", "-c"]
+SHELL ["/bin/bash", "-c"]
 
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2023-03-16T15:00:00Z"
@@ -85,12 +85,8 @@ fi \
   && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.gz" \
   && tar -xzf s6-overlay-${S6_ARCH}.tar.gz -C / \
   && tar -xzf s6-overlay-${S6_ARCH}.tar.gz -C /usr ./bin \
-  && rm -rf s6-overlay-${S6_ARCH}.tar.gz
-
-# Create Required Directories for Guacamole
-RUN mkdir ${GUACAMOLE_HOME}
-RUN mkdir ${GUACAMOLE_HOME}/lib
-RUN mkdir ${GUACAMOLE_HOME}/extensions
+  && rm -rf s6-overlay-${S6_ARCH}.tar.gz \
+  && mkdir -p ${GUACAMOLE_HOME}/{lib,extensions}
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
