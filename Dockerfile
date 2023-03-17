@@ -86,7 +86,7 @@ fi \
   && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.gz" \
   && tar -xzf s6-overlay-${S6_ARCH}.tar.gz -C / \
   && tar -xzf s6-overlay-${S6_ARCH}.tar.gz -C /usr ./bin \
-  && rm -rf s6-overlay-${S6_ARCH}.tar.gzs
+  && rm -rf s6-overlay-${S6_ARCH}.tar.gz
 
 # Create Required Directories for Guacamole
 RUN mkdir -p ${GUACAMOLE_HOME} \
