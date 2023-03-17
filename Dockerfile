@@ -88,7 +88,9 @@ fi \
   && rm -rf s6-overlay-${S6_ARCH}.tar.gz
 
 # Create Required Directories for Guacamole
-RUN mkdir -p ${GUACAMOLE_HOME}/{lib,extensions}
+RUN mkdir ${GUACAMOLE_HOME}
+RUN mkdir ${GUACAMOLE_HOME}/lib
+RUN mkdir ${GUACAMOLE_HOME}/extensions
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
