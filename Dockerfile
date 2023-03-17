@@ -35,8 +35,7 @@ ENV \
   DESCRIPTION="${DESCRIPTION}" \
   PACKAGE="${PACKAGE}" \
   VERSION="${VERSION}" \
-  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}" \
-  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
+  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}"
 
 ENV \
   GUAC_VER=${VERSION} \
@@ -89,9 +88,7 @@ fi \
   && rm -rf s6-overlay-${S6_ARCH}.tar.gz
 
 # Create Required Directories for Guacamole
-RUN mkdir -p ${GUACAMOLE_HOME} \
-  ${GUACAMOLE_HOME}/lib \
-  ${GUACAMOLE_HOME}/extensions
+RUN mkdir -p ${GUACAMOLE_HOME}/{lib,extensions}
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
