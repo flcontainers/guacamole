@@ -1,8 +1,8 @@
 # Select BASE
-FROM tomcat:9-jdk8
+FROM tomcat:8.5-jdk8-openjdk-slim-bullseye
 
 ARG APPLICATION="guacamole"
-ARG BUILD_RFC3339="2023-03-16T15:00:00Z"
+ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
 ARG REVISION="local"
 ARG DESCRIPTION="Guacamole 1.5.0"
 ARG PACKAGE="MaxWaldorf/guacamole"
@@ -32,9 +32,7 @@ ENV \
   REVISION="${REVISION}" \
   DESCRIPTION="${DESCRIPTION}" \
   PACKAGE="${PACKAGE}" \
-  VERSION="${VERSION}" \
-  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}" \
-  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
+  VERSION="${VERSION}"
 
 ENV \
   GUAC_VER=${VERSION} \
@@ -44,67 +42,48 @@ ENV \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
 
-# Set working DIR
+#Set working DIR
+RUN mkdir -p ${GUACAMOLE_HOME}/{extensions,extensions-available,lib}
 WORKDIR ${GUACAMOLE_HOME}
 
-# Display variables (Test)
-RUN echo "I'm building for TARGETPLATFORM=${TARGETPLATFORM}"
+# Add support for bullseye-backports
+RUN echo "deb http://deb.debian.org/debian bullseye-backports main contrib non-free" >> /etc/apt/sources.list
 
-# Add support for Postgresql 13
-RUN apt-get update && apt-get install -y curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
-RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee  /etc/apt/sources.list.d/pgdg.list
+# Add essential utils
+RUN set -xe && \
+  apt-get update && apt-get install -y vim xz-utils \
+  curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
 
-# Install initial components
-RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y xz-utils curl postgresql-${PG_MAJOR} ghostscript
-
-#Add Fonts as requested by users
-RUN apt-get install -y fonts-spleen fonty-rg
+# Add Postgresql
+RUN set -xe && \
+apt-get update && apt-get install -y postgresql-${PG_MAJOR}
 
 # Install dependencies
-RUN apt-get install -y \
+RUN set -xe && \
+  apt-get -t bullseye-backports install -y \
   build-essential \
-  libcairo2-dev libjpeg-turbo8-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
+  ghostscript fonts-spleen fonty-rg\
+  libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
   libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
   freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev libssl-dev libvorbis-dev libwebp-dev
 
 # Apply the s6-overlay
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
-  then S6_ARCH=x86_64; \
-elif [ "$TARGETPLATFORM" = "linux/arm/v6" ]; \
-  then S6_ARCH=arm; \
-elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; \
-  then S6_ARCH=armhf; \
-elif [ "$TARGETPLATFORM" = "linux/arm64" ]; \
-  then S6_ARCH=aarch64; \
-elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
-  then S6_ARCH=powerpc64le; \
-else S6_ARCH=x86_64; \
-fi \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" > /tmp/s6-overlay-noarch.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" > /tmp/s6-overlay-${S6_ARCH}.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz" > /tmp/s6-overlay-symlinks-noarch.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz
-  #&& curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz" > /tmp/syslogd-overlay-noarch.tar.xz \
-  #&& tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz
-
-# Create Required Directories for Guacamole
-RUN mkdir -p ${GUACAMOLE_HOME} \
-  ${GUACAMOLE_HOME}/lib \
-  ${GUACAMOLE_HOME}/extensions
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; then ARCH=powerpc64le; else ARCH=amd64; fi \
+  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.3/s6-overlay-${ARCH}.tar.gz" \
+  && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
+  && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
+  && rm -rf s6-overlay-${ARCH}.tar.gz
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
-  && tar -xzf guacamole-server-${GUAC_VER}.tar.gz \
-  && cd guacamole-server-${GUAC_VER} \
-  && ./configure \
-  && make -j$(getconf _NPROCESSORS_ONLN) \
-  && make install \
-  && cd .. \
-  && rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER} \
-  && ldconfig
+&& tar -xzf ${GUACAMOLE_HOME}/guacamole-server-${GUAC_VER}.tar.gz \
+&& cd ${GUACAMOLE_HOME}/guacamole-server-${GUAC_VER} \
+&& ./configure \
+&& make -j$(getconf _NPROCESSORS_ONLN) \
+&& make install \
+&& cd .. \
+&& rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER} \
+&& ldconfig
 
 # Install guacamole-client and postgres auth adapter
 RUN set -x \
@@ -115,8 +94,6 @@ RUN set -x \
 ###############################################################################
 ################################# EXTENSIONS ##################################
 ###############################################################################
-
-RUN mkdir ${GUACAMOLE_HOME}/extensions-available
 
 # Download all extensions
 RUN set -xe \
@@ -159,8 +136,10 @@ RUN set -xe \
 ###############################################################################
 ###############################################################################
 
-# Purge Build packages
-RUN apt-get purge -y build-essential \
+# Purge BUild packages
+RUN apt-get dist-upgrade -y
+RUN apt-get purge -y build-essential xz-utils\
+
   && apt-get autoremove -y && apt-get autoclean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -171,7 +150,5 @@ ENV GUACAMOLE_HOME=/config/guacamole
 WORKDIR /config
 
 COPY rootfs /
-
-EXPOSE 8080
 
 ENTRYPOINT [ "/init" ]
