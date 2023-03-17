@@ -81,10 +81,10 @@ elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
   then S6_ARCH=ppc64le; \
 else S6_ARCH=amd64; \
 fi \
-  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${ARCH}.tar.gz" \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
-  && rm -rf s6-overlay-${ARCH}.tar.gz
+  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.gz" \
+  && tar -xzf s6-overlay-${S6_ARCH}.tar.gz -C / \
+  && tar -xzf s6-overlay-${S6_ARCH}.tar.gz -C /usr ./bin \
+  && rm -rf s6-overlay-${S6_ARCH}.tar.gzs
 
 # Create Required Directories for Guacamole
 RUN mkdir -p ${GUACAMOLE_HOME} \
