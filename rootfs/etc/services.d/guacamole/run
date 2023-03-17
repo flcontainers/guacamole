@@ -15,6 +15,7 @@ if [ $? -ne 0 ]; then
 
   /etc/cont-init.d/30-defaults.sh
   /etc/cont-init.d/50-extensions
+
 else
   if [ "$(cat /config/.database-version)" != "$GUAC_VER" ]; then
     cat /app/guacamole/schema/upgrade/upgrade-pre-$GUAC_VER.sql | psql -U $POSTGRES_USER -d $POSTGRES_DB -f -
@@ -22,6 +23,7 @@ else
 
     /etc/cont-init.d/30-defaults.sh
     /etc/cont-init.d/50-extensions
+    
   fi
 fi
 

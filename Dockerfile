@@ -1,7 +1,5 @@
 # Select BASE
-FROM tomcat:8.5-jdk8-openjdk-slim-bullseye
-
-SHELL ["/bin/bash", "-c"]
+FROM tomcat:9-jdk8
 
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
@@ -11,6 +9,7 @@ ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
+ARG S6_OVERLAY_VERSION="3.1.4.1"
 # Do not require interaction during build
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -18,7 +17,7 @@ STOPSIGNAL SIGKILL
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
   org.opencontainers.image.created=$BUILD_RFC3339 \
-  org.opencontainers.image.authors="MaxWaldorf,OZNU" \
+  org.opencontainers.image.authors="MaxWaldorf" \
   org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
   org.opencontainers.image.description="${DESCRIPTION}" \
   org.opencontainers.image.licenses="GPLv3" \
@@ -33,7 +32,9 @@ ENV \
   REVISION="${REVISION}" \
   DESCRIPTION="${DESCRIPTION}" \
   PACKAGE="${PACKAGE}" \
-  VERSION="${VERSION}"
+  VERSION="${VERSION}" \
+  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}" \
+  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
 
 ENV \
   GUAC_VER=${VERSION} \
@@ -90,12 +91,7 @@ RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamo
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.3.1.jar "https://jdbc.postgresql.org/download/postgresql-42.3.1.jar" \
-  && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
-  && tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
-  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
-  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/schema ${GUACAMOLE_HOME}/ \
-  && rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.5.4.jar "https://jdbc.postgresql.org/download/postgresql-42.5.4.jar"
 
 ###############################################################################
 ################################# EXTENSIONS ##################################
@@ -145,6 +141,7 @@ RUN set -xe \
 # Purge BUild packages
 RUN apt-get dist-upgrade -y
 RUN apt-get purge -y build-essential xz-utils\
+
   && apt-get autoremove -y && apt-get autoclean \
   && rm -rf /var/lib/apt/lists/*
 
