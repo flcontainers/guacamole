@@ -1,5 +1,5 @@
 # Select BASE
-FROM tomcat:9-jdk8
+FROM tomcat:10-jdk8
 
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2023-03-16T15:00:00Z"
