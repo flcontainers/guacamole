@@ -4,9 +4,15 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    target-branch: "dev"
+     # Add reviewers
+    reviewers:
+      - "MaxWaldorf"
 
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-  
+    target-branch: "dev"
+    reviewers:
+      - "MaxWaldorf"

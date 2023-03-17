@@ -2,19 +2,13 @@
 
 # Docker Guacamole
 
-⚠️ **Starting version 1.4.2, compatibility with previous versions is broken due to Postgresql upgrade from 11 to 13!** <br />
-ℹ️ Make sure to backup "guacamole_db" in postgres before upgrade to inject it later... <br />
-<br />
-<br />
-**Disclaimer:** This work is based on the work of: https://github.com/oznu/docker-guacamole
-
 A Docker Container for [Apache Guacamole](https://guacamole.apache.org/), a client-less remote desktop gateway. It supports standard protocols like VNC, RDP, and SSH over HTML5.
 
-This image will run on most platforms that support Docker including Docker for arm64 boards (Raspberry ARM64v8 on an 64bit OS).
+Supported Linux OS: amd64, arm64, ppc64el
 
-This container runs the guacamole web client, the guacd server and a postgres database.
+This container runs the guacamole web client, the guacd server and a postgres database (version 13).
 
-## Usage (works for x86_64 and arm64v8, no support for 32 bits)
+## Usage (works for x86_64, aarch64 and ppc64le, no support for 32 bits)
 
 ```shell
 docker run \
@@ -58,8 +52,10 @@ docker run \
 - auth-sso-saml
 - auth-sso-cas
 - auth-totp
+- vault-ksm
+- history-recording-storage
 
-More information: [Guacamole v1.4.0 release notes](https://guacamole.apache.org/releases/1.4.0/)
+More information: [Guacamole v1.5.0 release notes](https://guacamole.apache.org/releases/1.5.0/)
 
 You should only enable the extensions you require, if an extensions is not configured correctly in the `guacamole.properties` file it may prevent the system from loading. See the [official documentation](https://guacamole.apache.org/doc/gug/) for more details.
 
@@ -87,8 +83,6 @@ volumes:
 ```
 
 ## License
-
-(Based on OZNU choice GPLv3)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

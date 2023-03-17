@@ -21,6 +21,8 @@ jobs:
       # Get the repository's code
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: dev
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -46,7 +48,7 @@ jobs:
           # Docker tags based on the following events/attributes
           tags: |
             type=schedule,pattern=nightly
-            type=raw,value=beta
+            type=raw,value=nightly
           flavor: |
             latest=false
 
@@ -54,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.guac.outputs.tags }}
           labels: ${{ steps.guac.outputs.labels }}
