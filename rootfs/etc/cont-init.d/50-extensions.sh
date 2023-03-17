@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash
+#!/usr/bin/with-contenv sh
 
 # clean up extensions
 for i in auth-ldap auth-duo auth-header auth-cas auth-openid auth-quickconnect auth-totp; do

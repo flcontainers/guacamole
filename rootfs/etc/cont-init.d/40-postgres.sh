@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash
+#!/usr/bin/with-contenv sh
 
 mkdir -p /config/postgres
 mkdir -p /var/run/postgresql 

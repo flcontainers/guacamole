@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash
+#!/usr/bin/with-contenv sh
 
 until pg_isready; do
   echo "Waiting for postgres to come up..."
