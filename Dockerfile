@@ -33,7 +33,8 @@ ENV \
   DESCRIPTION="${DESCRIPTION}" \
   PACKAGE="${PACKAGE}" \
   VERSION="${VERSION}" \
-  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}"
+  S6_OVERLAY_VERSION="${S6_OVERLAY_VERSION}" \
+  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
 
 ENV \
   GUAC_VER=${VERSION} \
@@ -85,9 +86,9 @@ fi \
   && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" > /tmp/s6-overlay-${S6_ARCH}.tar.xz \
   && tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz \
   && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz" > /tmp/s6-overlay-symlinks-noarch.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz \
-  && curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz" > /tmp/syslogd-overlay-noarch.tar.xz \
-  && tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz
+  && tar -C / -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz
+  #&& curl -SL "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/syslogd-overlay-noarch.tar.xz" > /tmp/syslogd-overlay-noarch.tar.xz \
+  #&& tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz
 
 # Create Required Directories for Guacamole
 RUN mkdir -p ${GUACAMOLE_HOME} \
