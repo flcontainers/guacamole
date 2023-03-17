@@ -78,7 +78,7 @@ elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; \
 elif [ "$TARGETPLATFORM" = "linux/arm64" ]; \
   then S6_ARCH=aarch64; \
 elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; \
-  then S6_ARCH=powerpc64le; \
+  then S6_ARCH=ppc64le; \
 else S6_ARCH=amd64; \
 fi \
   && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${ARCH}.tar.gz" \
