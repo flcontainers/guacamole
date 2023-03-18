@@ -1,6 +1,8 @@
 # Select BASE
 FROM tomcat:8.5-jdk8-openjdk-slim-bullseye
 
+SHELL ["/bin/bash", "-c"]
+
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
 ARG REVISION="local"
@@ -9,7 +11,6 @@ ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
 ARG PG_MAJOR="13"
-ARG S6_OVERLAY_VERSION="3.1.4.1"
 # Do not require interaction during build
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -89,7 +90,7 @@ RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamo
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.5.4.jar "https://jdbc.postgresql.org/download/postgresql-42.5.4.jar"
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.3.1.jar "https://jdbc.postgresql.org/download/postgresql-42.3.1.jar"
 
 ###############################################################################
 ################################# EXTENSIONS ##################################
@@ -139,7 +140,6 @@ RUN set -xe \
 # Purge BUild packages
 RUN apt-get dist-upgrade -y
 RUN apt-get purge -y build-essential xz-utils\
-
   && apt-get autoremove -y && apt-get autoclean \
   && rm -rf /var/lib/apt/lists/*
 
