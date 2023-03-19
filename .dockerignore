@@ -1,10 +1,10 @@
 #Ignore the git and cache folders
 .git
 .cache
+.drone.yml
+.github
+.gitignore
 
 #Ingore all markdown and class files
 *.md
 **/*.class
-
-#Ignore tmp
-tmp

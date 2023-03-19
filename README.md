@@ -8,7 +8,7 @@ Supported Linux OS: amd64, arm64, ppc64el
 
 This container runs the guacamole web client, the guacd server and a postgres database (version 13).
 
-## Usage (works for x86_64 and aarch64, no support for 32 bits)
+## Usage
 
 ```shell
 docker run \

@@ -1,5 +1,6 @@
-#!/usr/bin/with-contenv sh
+#!/usr/bin/env bash
 
+# Wait for postgres to be ready
 until pg_isready; do
   echo "Waiting for postgres to come up..."
   sleep 1
@@ -11,21 +12,10 @@ if [ $? -ne 0 ]; then
   createuser -U postgres $POSTGRES_USER
   createdb -U postgres -O $POSTGRES_USER $POSTGRES_DB
   cat /app/guacamole/schema/*.sql | psql -U $POSTGRES_USER -d $POSTGRES_DB -f -
-  echo "$GUAC_VER" > /config/.database-version
-
-  /etc/cont-init.d/30-defaults.sh
-  /etc/cont-init.d/50-extensions
-
+  echo "$GUAC_VER" > /config/db_check/.database-version
 else
-  if [ "$(cat /config/.database-version)" != "$GUAC_VER" ]; then
+  if [ "$(cat /config/db_check/.database-version)" != "$GUAC_VER" ]; then
     cat /app/guacamole/schema/upgrade/upgrade-pre-$GUAC_VER.sql | psql -U $POSTGRES_USER -d $POSTGRES_DB -f -
-    echo "$GUAC_VER" > /config/.database-version
-
-    /etc/cont-init.d/30-defaults.sh
-    /etc/cont-init.d/50-extensions
-    
+    echo "$GUAC_VER" > /config/db_check/.database-version
   fi
 fi
-
-echo "Starting guacamole client..."
-s6-setuidgid root catalina.sh run
