@@ -1,7 +1,5 @@
 FROM debian:bullseye-slim
 
-SHELL ["/bin/bash", "-c"]
-
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
 ARG REVISION="local"
