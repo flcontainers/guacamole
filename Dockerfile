@@ -44,7 +44,7 @@ ENV \
 SHELL ["/bin/bash", "-c"]
 
 # Set working DIR
-RUN mkdir -p /config /config/db_check
+RUN mkdir -p /config
 RUN mkdir -p ${GUACAMOLE_HOME}/extensions ${GUACAMOLE_HOME}/extensions-available ${GUACAMOLE_HOME}/lib
 RUN mkdir /docker-entrypoint-initdb.d
 WORKDIR ${GUACAMOLE_HOME}
@@ -159,7 +159,6 @@ RUN chmod +x /usr/local/bin/*.sh
 RUN chmod +x /etc/init.d/tomcat
 RUN chmod +x /etc/init.d/postgres
 RUN chmod +x /startup.sh
-RUN chown -R postgres:postgres /config/db_check
 
 # Hack for windows based host (CRLF / LF)
 RUN sed -i -e 's/\r$//' /etc/init.d/*
