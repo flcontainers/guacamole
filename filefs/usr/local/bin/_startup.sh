@@ -6,7 +6,11 @@ mkdir -p /root/.config/freerdp/known_hosts
 # old file db check and location move
 DB_FILE=/config/.database-version
 if [ -f "$DB_FILE" ]; then
-    mv -f $DB_FILE /config/db_check && chown postgres:postgres /config/db_check/.database-version
+    rm -rf /config/db_check && \
+    mkdir -p /config/db_check && \
+    chown -R postgres:postgres /config/db_check && \
+    mv -f $DB_FILE /config/db_check && \
+    chown postgres:postgres /config/db_check/.database-version
 fi
 
 # enable extensions
