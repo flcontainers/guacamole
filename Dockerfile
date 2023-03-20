@@ -1,7 +1,4 @@
-# Select BASE
-FROM tomcat:8.5-jdk8-openjdk-slim-bullseye
-
-SHELL ["/bin/bash", "-c"]
+FROM debian:bullseye-slim
 
 ARG APPLICATION="guacamole"
 ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
@@ -10,11 +7,10 @@ ARG DESCRIPTION="Guacamole 1.5.0"
 ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
 ARG TARGETPLATFORM
-ARG PG_MAJOR="13"
-# Do not require interaction during build
+ARG POSTGRES_HOST_AUTH_METHOD="trust"
 ARG DEBIAN_FRONTEND=noninteractive
 
-STOPSIGNAL SIGKILL
+STOPSIGNAL SIGINT
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
   org.opencontainers.image.created=$BUILD_RFC3339 \
@@ -38,59 +34,69 @@ ENV \
 ENV \
   GUAC_VER=${VERSION} \
   GUACAMOLE_HOME=/app/guacamole \
-  PG_MAJOR=${PG_MAJOR} \
+  CATALINA_HOME=/opt/tomcat \
+  PG_MAJOR=13 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
-  POSTGRES_DB=guacamole_db
+  POSTGRES_DB=guacamole_db \
+  POSTGRES_HOST_AUTH_METHOD=${POSTGRES_HOST_AUTH_METHOD}
 
-#Set working DIR
-RUN mkdir -p ${GUACAMOLE_HOME}/{extensions,extensions-available,lib}
+SHELL ["/bin/bash", "-c"]
+
+# Set working DIR
+RUN mkdir -p /config
+RUN mkdir -p ${GUACAMOLE_HOME}/extensions ${GUACAMOLE_HOME}/extensions-available ${GUACAMOLE_HOME}/lib
+RUN mkdir /docker-entrypoint-initdb.d
 WORKDIR ${GUACAMOLE_HOME}
 
-# Add support for bullseye-backports
-RUN echo "deb http://deb.debian.org/debian bullseye-backports main contrib non-free" >> /etc/apt/sources.list
-
 # Add essential utils
-RUN set -xe && \
-  apt-get update && apt-get install -y vim xz-utils \
-  curl gpg gnupg2 software-properties-common apt-transport-https lsb-release ca-certificates
-
-# Add Postgresql
-RUN set -xe && \
-apt-get update && apt-get install -y postgresql-${PG_MAJOR}
+RUN apt-get update && apt-get install -y bash vim curl build-essential gosu
 
 # Install dependencies
 RUN set -xe && \
-  apt-get -t bullseye-backports install -y \
-  build-essential \
-  ghostscript fonts-spleen fonty-rg\
+  apt-get update && \
+  apt-get install -y \
+  openjdk-11-jdk postgresql-${PG_MAJOR} \
+  ghostscript fonts-spleen fonty-rg \
   libcairo2-dev libjpeg62-turbo-dev libpng-dev libtool-bin uuid-dev libossp-uuid-dev \
   libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
   freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libwebsockets-dev libpulse-dev libssl-dev libvorbis-dev libwebp-dev
 
-# Apply the s6-overlay
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCH=aarch64; elif [ "$TARGETPLATFORM" = "linux/ppc64le" ]; then ARCH=powerpc64le; else ARCH=amd64; fi \
-  && curl -SLO "https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.3/s6-overlay-${ARCH}.tar.gz" \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C / \
-  && tar -xzf s6-overlay-${ARCH}.tar.gz -C /usr ./bin \
-  && rm -rf s6-overlay-${ARCH}.tar.gz
+# Install tomcat
+RUN mkdir /opt/tomcat
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.73/bin/apache-tomcat-9.0.73.tar.gz /tmp/
+RUN tar xvzf /tmp/apache-tomcat-9.0.73.tar.gz --strip-components 1 --directory /opt/tomcat
+RUN chmod +x /opt/tomcat/bin/*.sh
+
+RUN groupadd tomcat && \
+useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+
+RUN chgrp -R tomcat /opt/tomcat && \
+chmod -R g+r /opt/tomcat/conf && \
+chmod g+x /opt/tomcat/conf && \
+chown -R tomcat /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/
 
 # Install guacamole-server
 RUN curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/source/guacamole-server-${GUAC_VER}.tar.gz" \
 && tar -xzf ${GUACAMOLE_HOME}/guacamole-server-${GUAC_VER}.tar.gz \
 && cd ${GUACAMOLE_HOME}/guacamole-server-${GUAC_VER} \
-&& ./configure \
-&& make -j$(getconf _NPROCESSORS_ONLN) \
+&& ./configure --with-init-dir=/etc/init.d \
+&& make \
 && make install \
+&& ldconfig \
 && cd .. \
-&& rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER} \
-&& ldconfig
+&& rm -rf guacamole-server-${GUAC_VER}.tar.gz guacamole-server-${GUAC_VER}
 
 # Install guacamole-client and postgres auth adapter
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.3.1.jar "https://jdbc.postgresql.org/download/postgresql-42.3.1.jar"
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.6.0.jar "https://jdbc.postgresql.org/download/postgresql-42.6.0.jar" \
+  && curl -SLO "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
+  && tar -xzf guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
+  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
+  && cp -R guacamole-auth-jdbc-${GUAC_VER}/postgresql/schema ${GUACAMOLE_HOME}/ \
+  && rm -rf guacamole-auth-jdbc-${GUAC_VER} guacamole-auth-jdbc-${GUAC_VER}.tar.gz
 
 ###############################################################################
 ################################# EXTENSIONS ##################################
@@ -137,9 +143,8 @@ RUN set -xe \
 ###############################################################################
 ###############################################################################
 
-# Purge BUild packages
-RUN apt-get dist-upgrade -y
-RUN apt-get purge -y build-essential xz-utils\
+# Check vulnerabilities and Purge Build packages
+RUN apt-get purge -y build-essential \
   && apt-get autoremove -y && apt-get autoclean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -147,8 +152,20 @@ RUN apt-get purge -y build-essential xz-utils\
 ENV PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
 ENV GUACAMOLE_HOME=/config/guacamole
 
+# Copy files
+COPY filefs /
+RUN chmod +x /usr/local/bin/*.sh
+RUN chmod +x /etc/init.d/tomcat
+RUN chmod +x /etc/init.d/postgres
+RUN chmod +x /startup.sh
+
+# Hack for windows based host (CRLF / LF)
+RUN sed -i -e 's/\r$//' /etc/init.d/*
+
+# Docker Startup Scripts
+WORKDIR /
+ENTRYPOINT [ "/startup.sh" ]
+
+EXPOSE 8080
+
 WORKDIR /config
-
-COPY rootfs /
-
-ENTRYPOINT [ "/init" ]

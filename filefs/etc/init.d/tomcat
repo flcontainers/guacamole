@@ -1,0 +1,31 @@
+#!/bin/sh
+# Tomcat auto-start
+
+export CATALINA_HOME=/opt/tomcat
+
+# Start mode
+start()
+{
+  gosu tomcat bash -c '$CATALINA_HOME/bin/startup.sh'
+}
+
+# Stop mode
+stop()
+{
+  gosu tomcat bash -c '$CATALINA_HOME/bin/shutdown.sh'
+}
+
+case $1 in
+start)
+  start
+  ;;
+stop)
+  stop
+  ;;
+restart)
+  stop
+  sleep 1
+  start
+  ;;
+esac
+exit 0
