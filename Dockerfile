@@ -144,8 +144,7 @@ RUN set -xe \
 ###############################################################################
 
 # Check vulnerabilities and Purge Build packages
-RUN apt-get dist-upgrade -y \
-  && apt-get purge -y build-essential \
+RUN apt-get purge -y build-essential \
   && apt-get autoremove -y && apt-get autoclean \
   && rm -rf /var/lib/apt/lists/*
 
