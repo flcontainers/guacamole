@@ -47,8 +47,8 @@ jobs:
             maxwaldorf/guacamole
           # Docker tags based on the following events/attributes
           tags: |
-            type=schedule,pattern=nightly
-            type=raw,value=nightly
+            type=schedule,pattern=testing
+            type=raw,value=testing
           flavor: |
             latest=false
 
