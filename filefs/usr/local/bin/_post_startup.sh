@@ -7,15 +7,17 @@ until pg_isready; do
 done
 
 # Create database if it does not exist
-psql -U postgres -lqt | cut -d \| -f 1 | grep -qw $POSTGRES_DB
-if [ $? -ne 0 ]; then
-  createuser -U postgres $POSTGRES_USER
-  createdb -U postgres -O $POSTGRES_USER $POSTGRES_DB
-  cat /app/guacamole/schema/*.sql | psql -U $POSTGRES_USER -d $POSTGRES_DB -f -
-  echo "$GUAC_VER" > /config/db_check/.database-version
-else
+if [ -f "/config/db_check/.database-version"]; then
   if [ "$(cat /config/db_check/.database-version)" != "$GUAC_VER" ]; then
+    if [ -f "/app/guacamole/schema/upgrade/upgrade-pre-$GUAC_VER.sql"]: then
     cat /app/guacamole/schema/upgrade/upgrade-pre-$GUAC_VER.sql | psql -U $POSTGRES_USER -d $POSTGRES_DB -f -
     echo "$GUAC_VER" > /config/db_check/.database-version
+    echo "guacamole database updated to $GUAC_VER"
+    fi
+  else
+    echo "guacamole database already up-to-date. Nothing applied..."
   fi
+else
+  cat /app/guacamole/schema/*.sql | psql -U $POSTGRES_USER -d $POSTGRES_DB -f -
+  echo "$GUAC_VER" > /config/db_check/.database-version
 fi
