@@ -50,7 +50,7 @@ RUN mkdir /docker-entrypoint-initdb.d
 WORKDIR ${GUACAMOLE_HOME}
 
 # Add essential utils
-RUN apt-get update && apt-get install -y bash vim curl build-essential gosu
+RUN apt-get update && apt-get install -y bash vim curl build-essential gosu netcat
 
 # Install dependencies
 RUN set -xe && \
