@@ -3,6 +3,12 @@ echo "Preparing Config Folder"
 cp -rn /app/guacamole /config
 mkdir -p /root/.config/freerdp/known_hosts
 
+# avoid DB locks after a bad shutdown...
+if [ -f "/config/postgres/postmaster.pid" ]; then
+  rm -f /config/postgres/postmaster.pid
+  echo "DB lock removed..."
+fi
+
 # old file db check and location move
 DB_FILE=/config/.database-version
 if [ -f "$DB_FILE" ]; then
