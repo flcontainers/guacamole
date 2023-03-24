@@ -20,4 +20,9 @@ done
 /etc/init.d/tomcat start
 
 echo "container started"
-tail -f /dev/null
+#tail -f /dev/null
+# Wait for any process to exit
+wait -n
+  
+# Exit with status of process that exited first
+exit $?
