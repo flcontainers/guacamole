@@ -1,7 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/sh
 echo "Preparing Config Folder"
 cp -rn /app/guacamole /config
 mkdir -p /root/.config/freerdp/known_hosts
+
+# Own postgres folder if exist (change to alpine)
+if [ -d "/config/postgres/" ]; then
+  chown -R postgres:postgres /config/postgres
+  echo "Applied owners rights on Postgres folder..."
+fi
 
 # avoid DB locks after a bad shutdown...
 if [ -f "/config/postgres/postmaster.pid" ]; then

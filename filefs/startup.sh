@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 echo "Running startup scripts"
 /usr/local/bin/_startup.sh
@@ -7,7 +7,7 @@ echo "Running Postgres"
 /etc/init.d/postgres start
 
 echo "Running Guacamole server"
-/etc/init.d/guacd start
+bash -c '/opt/guacamole/sbin/guacd -b 0.0.0.0 -L $GUACD_LOG_LEVEL -f' &
 
 echo "Post startup DB scripts"
 gosu postgres bash -c '/usr/local/bin/_post_startup.sh'
