@@ -44,27 +44,37 @@ ENV \
 
 # Install build dependencies
 RUN apk add --no-cache                \
-        autoconf                      \
-        automake                      \
-        build-base                    \
-        cairo-dev                     \
-        cmake                         \
-        git                           \
-        grep                          \
-        libjpeg-turbo-dev             \
-        libpng-dev                    \
-        libtool                       \
-        libwebp-dev                   \
-        make                          \
-        openssl1.1-compat-dev         \
-        pango-dev                     \
-        pulseaudio-dev                \
+        git                                                                                           \
+        make                                                                                          \
+        automake                                                                                      \
+        autoconf                                                                                      \
+        cmake                                                                                         \
+        gcc                                                                                           \
+        libtool                                                                                       \
+        build-base                                                                                    \
+        linux-headers                                                                                 \
+        bsd-compat-headers                                                                            \
+        intltool                                                                                      \
+        musl-dev                                                                                      \
+        cairo-dev                                                                                     \
+        libjpeg-turbo-dev                                                                             \
+        libpng-dev                                                                                    \
+        pango-dev                                                                                     \
+        libssh2-dev                                                                                   \
+        libvncserver-dev                                                                              \
+        openssl-dev                                                                                   \
+        libvorbis-dev                                                                                 \
+        libwebp-dev                                                                                   \
+        libsndfile-dev                                                                                \
+        pulseaudio-dev                                                                                \
+        libusb-dev                                                                                    \
+        freerdp-dev                                                                                   \
+        libwebsockets-dev \
         util-linux-dev
+
 
 # Copy source to container for sake of build
 ARG BUILD_DIR=/tmp/guacamole-server
-RUN cd /tmp && \
-git clone --branch=${GUAC_VER} https://github.com/apache/guacamole-server.git guacamole-server
 
 #
 # Base directory for installed build artifacts.
@@ -79,11 +89,7 @@ ARG PREFIX_DIR=/opt/guacamole
 # library (these can be overridden at build time if a specific version is
 # needed)
 #
-ARG WITH_FREERDP='2(\.\d+)+'
-ARG WITH_LIBSSH2='libssh2-\d+(\.\d+)+'
 ARG WITH_LIBTELNET='\d+(\.\d+)+'
-ARG WITH_LIBVNCCLIENT='LibVNCServer-\d+(\.\d+)+'
-ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
 
 #
 # Default build options for each core protocol support library, as well as
@@ -91,77 +97,32 @@ ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
 # options are needed)
 #
 
-ARG FREERDP_OPTS="\
-    -DBUILTIN_CHANNELS=OFF \
-    -DCHANNEL_URBDRC=OFF \
-    -DWITH_ALSA=OFF \
-    -DWITH_CAIRO=ON \
-    -DWITH_CHANNELS=ON \
-    -DWITH_CLIENT=ON \
-    -DWITH_CUPS=OFF \
-    -DWITH_DIRECTFB=OFF \
-    -DWITH_FFMPEG=OFF \
-    -DWITH_GSM=OFF \
-    -DWITH_GSSAPI=OFF \
-    -DWITH_IPP=OFF \
-    -DWITH_JPEG=ON \
-    -DWITH_LIBSYSTEMD=OFF \
-    -DWITH_MANPAGES=OFF \
-    -DWITH_OPENH264=OFF \
-    -DWITH_OPENSSL=ON \
-    -DWITH_OSS=OFF \
-    -DWITH_PCSC=OFF \
-    -DWITH_PULSE=OFF \
-    -DWITH_SERVER=OFF \
-    -DWITH_SERVER_INTERFACE=OFF \
-    -DWITH_SHADOW_MAC=OFF \
-    -DWITH_SHADOW_X11=OFF \
-    -DWITH_SSE2=ON \
-    -DWITH_WAYLAND=OFF \
-    -DWITH_X11=OFF \
-    -DWITH_X264=OFF \
-    -DWITH_XCURSOR=ON \
-    -DWITH_XEXT=ON \
-    -DWITH_XI=OFF \
-    -DWITH_XINERAMA=OFF \
-    -DWITH_XKBFILE=ON \
-    -DWITH_XRENDER=OFF \
-    -DWITH_XTEST=OFF \
-    -DWITH_XV=OFF \
-    -DWITH_ZLIB=ON"
-
 ARG GUACAMOLE_SERVER_OPTS="\
     --disable-guaclog"
-
-ARG LIBSSH2_OPTS="\
-    -DBUILD_EXAMPLES=OFF \
-    -DBUILD_SHARED_LIBS=ON"
 
 ARG LIBTELNET_OPTS="\
     --disable-static \
     --disable-util"
 
-ARG LIBVNCCLIENT_OPTS=""
-
-ARG LIBWEBSOCKETS_OPTS="\
-    -DDISABLE_WERROR=ON \
-    -DLWS_WITHOUT_SERVER=ON \
-    -DLWS_WITHOUT_TESTAPPS=ON \
-    -DLWS_WITHOUT_TEST_CLIENT=ON \
-    -DLWS_WITHOUT_TEST_PING=ON \
-    -DLWS_WITHOUT_TEST_SERVER=ON \
-    -DLWS_WITHOUT_TEST_SERVER_EXTPOLL=ON \
-    -DLWS_WITH_STATIC=OFF"
+# Build libtelnet
+RUN cd /tmp && \
+    git clone --branch 0.23 https://github.com/seanmiddleditch/libtelnet.git && \
+    cd /tmp/libtelnet                                                                  && \
+    autoreconf -i                                                                      && \
+    autoconf                                                                           && \
+    ./configure --prefix="$PREFIX_DIR" "$@"                                                                        && \
+    make                                                                               && \
+    make install 
 
 # Build guacamole-server and its core protocol library dependencies
-RUN ${BUILD_DIR}/src/guacd-docker/bin/build-all.sh
-
-# Record the packages of all runtime library dependencies
-RUN ${BUILD_DIR}/src/guacd-docker/bin/list-dependencies.sh \
-        ${PREFIX_DIR}/sbin/guacd               \
-        ${PREFIX_DIR}/lib/libguac-client-*.so  \
-        ${PREFIX_DIR}/lib/freerdp2/*guac*.so   \
-        > ${PREFIX_DIR}/DEPENDENCIES
+RUN cd /tmp && \
+git clone --branch=${GUAC_VER} https://github.com/apache/guacamole-server.git guacamole-server && \
+cd guacamole-server && \
+autoreconf -fi && \
+autoconf && \
+./configure --prefix="$PREFIX_DIR" $GUACAMOLE_SERVER_OPTS && \
+make && \
+make install 
 
 # Use same Alpine version as the base for the runtime image
 FROM alpine:${ALPINE_BASE_IMAGE}
@@ -209,10 +170,24 @@ RUN apk add --no-cache                \
         terminus-font                 \
         ttf-dejavu                    \
         ttf-liberation                \
-        util-linux-login && \
-    xargs apk add --no-cache < ${PREFIX_DIR}/DEPENDENCIES
+        util-linux-login              \
+        cairo                         \
+        libjpeg-turbo                 \
+        libpng                        \
+        pango                         \
+        libssh2                       \
+        libvncserver                  \
+        openssl                       \
+        libvorbis                     \
+        libwebp                       \
+        libsndfile                    \
+        pulseaudio                    \
+        libusb                        \
+        freerdp                       \
+        libwebsockets                 \
+        util-linux
 
-RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu
+RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu 
 
 # Install tomcat
 RUN mkdir /opt/tomcat
