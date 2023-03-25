@@ -163,7 +163,7 @@ RUN apk add --no-cache                \
         netcat-openbsd                \
         ca-certificates               \
         ghostscript                   \
-        openjdk17-jdk                 \
+        openjdk11-jdk                 \
         postgresql13                  \
         netcat-openbsd                \
         shadow                        \
