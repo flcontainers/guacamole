@@ -2,6 +2,7 @@
 echo "Preparing Config Folder"
 cp -rn /app/guacamole /config
 mkdir -p /root/.config/freerdp/known_hosts
+chown -R tomcat:tomcat /config/guacamole
 
 # Own postgres folder if exist (change to alpine)
 if [ -d "/config/postgres/" ]; then
