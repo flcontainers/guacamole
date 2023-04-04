@@ -37,7 +37,7 @@ For example:
 docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
-  -v /etc/localtime:/etc/localtime \
+  -v /etc/localtime:/etc/localtime:ro \
   -e TZ="UTC" \
   -e EXTENSIONS="auth-ldap,auth-duo" \
   flcontainers/guacamole
@@ -82,7 +82,7 @@ services:
       EXTENSIONS: 'auth-totp,auth-ldap'
     volumes:
       - postgres:/config
-      - /etc/localtime:/etc/localtime
+      - /etc/localtime:/etc/localtime:ro
     ports:
       - 8080:8080
 volumes:
