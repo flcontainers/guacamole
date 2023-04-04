@@ -23,6 +23,8 @@ The parameters are split into two halves, separated by a colon, the left hand si
 
 * `-p 8080:8080` - Binds the service to port 8080 on the Docker host, **required**
 * `-v /config` - The config and database location, **required**
+* `-v /etc/locatime` - Recommended to sync container time with host (Docker)
+* `-e TZ` - Set Timezone (standard format: Europe/Berlin)
 * `-e EXTENSIONS` - See below for details.
 
 ## Enabling Extensions
@@ -35,7 +37,9 @@ For example:
 docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
-  -e "EXTENSIONS=auth-ldap,auth-duo"
+  -v /etc/localtime:/etc/localtime:ro \
+  -e TZ="UTC" \
+  -e EXTENSIONS="auth-ldap,auth-duo" \
   flcontainers/guacamole
 ```
 
@@ -68,13 +72,17 @@ The default username is `guacadmin` with password `guacadmin`.
 Mapped volumes behave differently when running Docker for Windows and you may encounter some issues with PostgreSQL file system permissions. To avoid these issues, and still retain your config between container upgrades and recreation, you can use the local volume driver, as shown in the `docker-compose.yml` example below. When using this setup be careful to gracefully stop the container or data may be lost.
 
 ```yml
-version: "2"
+version: "3"
 services:
   guacamole:
     image: flcontainers/guacamole
     container_name: guacamole
+    environment:
+      TZ: 'UTC'
+      EXTENSIONS: 'auth-totp,auth-ldap'
     volumes:
       - postgres:/config
+      - /etc/localtime:/etc/localtime:ro
     ports:
       - 8080:8080
 volumes:
