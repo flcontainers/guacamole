@@ -44,6 +44,9 @@ ARG BUILD_DIR=/tmp/guacamole-server
 RUN cd /tmp && \
 git clone --branch=${GUAC_VER} https://github.com/apache/guacamole-server.git guacamole-server
 
+# replace libwebsockets repo (original repo failed many times)
+RUN sed -i 's#https://libwebsockets.org/repo/libwebsockets#https://github.com/warmcat/libwebsockets#g' ${BUILD_DIR}/src/guacd-docker/bin/build-all.sh
+
 #
 # Base directory for installed build artifacts.
 #
