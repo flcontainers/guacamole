@@ -1,80 +1,48 @@
 ARG ALPINE_BASE_IMAGE=latest
 FROM alpine:${ALPINE_BASE_IMAGE} AS builder
 
-ARG APPLICATION="guacamole"
-ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
-ARG REVISION="local"
-ARG DESCRIPTION="Guacamole 1.5.0"
-ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
-ARG POSTGRES_HOST_AUTH_METHOD="trust"
-
-STOPSIGNAL SIGINT
-
-LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
-  org.opencontainers.image.created=$BUILD_RFC3339 \
-  org.opencontainers.image.authors="MaxWaldorf" \
-  org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
-  org.opencontainers.image.description="${DESCRIPTION}" \
-  org.opencontainers.image.licenses="GPLv3" \
-  org.opencontainers.image.source="https://github.com/${PACKAGE}" \
-  org.opencontainers.image.revision=$REVISION \
-  org.opencontainers.image.version=$VERSION \
-  org.opencontainers.image.url="https://hub.docker.com/r/${PACKAGE}/"
+ARG TARGETPLATFORM
 
 ENV \
-  APPLICATION="${APPLICATION}" \
-  BUILD_RFC3339="${BUILD_RFC3339}" \
-  REVISION="${REVISION}" \
-  DESCRIPTION="${DESCRIPTION}" \
-  PACKAGE="${PACKAGE}" \
-  VERSION="${VERSION}"
+  GUAC_VER=${VERSION}
 
-ENV \
-  GUAC_VER=${VERSION} \
-  GUACAMOLE_HOME=/app/guacamole \
-  CATALINA_HOME=/opt/tomcat \
-  PG_MAJOR=13 \
-  PGDATA=/config/postgres \
-  POSTGRES_USER=guacamole \
-  POSTGRES_DB=guacamole_db \
-  POSTGRES_HOST_AUTH_METHOD=${POSTGRES_HOST_AUTH_METHOD}
-
-# Builder
-
-# Install build dependencies
+# Install build dependencies (Note: ffmpeg4 because of bug in 1.5.0 will be fixed in 1.5.1+)
 RUN apk add --no-cache                \
-        git                                                                                           \
-        make                                                                                          \
-        automake                                                                                      \
-        autoconf                                                                                      \
-        cmake                                                                                         \
-        gcc                                                                                           \
-        libtool                                                                                       \
-        build-base                                                                                    \
-        linux-headers                                                                                 \
-        bsd-compat-headers                                                                            \
-        intltool                                                                                      \
-        musl-dev                                                                                      \
-        cairo-dev                                                                                     \
-        libjpeg-turbo-dev                                                                             \
-        libpng-dev                                                                                    \
-        pango-dev                                                                                     \
-        libssh2-dev                                                                                   \
-        libvncserver-dev                                                                              \
-        openssl-dev                                                                                   \
-        libvorbis-dev                                                                                 \
-        libwebp-dev                                                                                   \
-        libsndfile-dev                                                                                \
-        pulseaudio-dev                                                                                \
-        libusb-dev                                                                                    \
-        freerdp-dev                                                                                   \
-        libwebsockets-dev \
+        alsa-lib-dev                  \
+        alsa-tools-dev                \
+        autoconf                      \
+        automake                      \
+        build-base                    \
+        cairo-dev                     \
+        cmake                         \
+        cups-dev                      \
+        faac-dev                      \
+        faad2-dev                     \
+        ffmpeg4-dev                   \
+        git                           \
+        grep                          \
+        gsm-dev                       \
+        gstreamer-dev                 \
+        libjpeg-turbo-dev             \
+        libpng-dev                    \
+        libtool                       \
+        libusb-dev                    \
+        libwebp-dev                   \
+        libxkbfile-dev                \
+        make                          \
+        openh264-dev                  \
+        openssl1.1-compat-dev         \
+        pango-dev                     \
+        pcsc-lite-dev                 \
+        pulseaudio-dev                \
         util-linux-dev
 
 
 # Copy source to container for sake of build
 ARG BUILD_DIR=/tmp/guacamole-server
+RUN cd /tmp && \
+git clone --branch=${GUAC_VER} https://github.com/apache/guacamole-server.git guacamole-server
 
 #
 # Base directory for installed build artifacts.
@@ -89,7 +57,11 @@ ARG PREFIX_DIR=/opt/guacamole
 # library (these can be overridden at build time if a specific version is
 # needed)
 #
+ARG WITH_FREERDP='2(\.\d+)+'
+ARG WITH_LIBSSH2='libssh2-\d+(\.\d+)+'
 ARG WITH_LIBTELNET='\d+(\.\d+)+'
+ARG WITH_LIBVNCCLIENT='LibVNCServer-\d+(\.\d+)+'
+ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
 
 #
 # Default build options for each core protocol support library, as well as
@@ -97,39 +69,108 @@ ARG WITH_LIBTELNET='\d+(\.\d+)+'
 # options are needed)
 #
 
+ARG FREERDP_OPTS_COMMON="\
+    -DBUILTIN_CHANNELS=OFF \
+    -DCHANNEL_URBDRC=OFF \
+    -DWITH_ALSA=ON \
+    -DWITH_CAIRO=ON \
+    -DWITH_CHANNELS=ON \
+    -DWITH_CLIENT=ON \
+    -DWITH_CUPS=ON \
+    -DWITH_DIRECTFB=OFF \
+    -DWITH_FAAC=ON \
+    -DWITH_FAAD2=ON \
+    -DWITH_FFMPEG=ON \
+    -DWITH_GSM=ON \
+    -DWITH_GSSAPI=OFF \
+    -DWITH_IPP=OFF \
+    -DWITH_JPEG=ON \
+    -DWITH_LIBSYSTEMD=OFF \
+    -DWITH_MANPAGES=OFF \
+    -DWITH_OPENH264=N \
+    -DWITH_OPENSSL=ON \
+    -DWITH_OSS=OFF \
+    -DWITH_PCSC=ON \
+    -DWITH_PULSE=ON \
+    -DWITH_SERVER=OFF \
+    -DWITH_SERVER_INTERFACE=OFF \
+    -DWITH_SHADOW_MAC=OFF \
+    -DWITH_SHADOW_X11=OFF \
+    -DWITH_WAYLAND=OFF \
+    -DWITH_X11=OFF \
+    -DWITH_X264=OFF \
+    -DWITH_XCURSOR=ON \
+    -DWITH_XEXT=ON \
+    -DWITH_XI=OFF \
+    -DWITH_XINERAMA=OFF \
+    -DWITH_XKBFILE=ON \
+    -DWITH_XRENDER=OFF \
+    -DWITH_XTEST=OFF \
+    -DWITH_XV=OFF \
+    -DWITH_ZLIB=ON"
+
 ARG GUACAMOLE_SERVER_OPTS="\
     --disable-guaclog"
+
+ARG LIBSSH2_OPTS="\
+    -DBUILD_EXAMPLES=OFF \
+    -DBUILD_SHARED_LIBS=ON"
 
 ARG LIBTELNET_OPTS="\
     --disable-static \
     --disable-util"
 
-# Build libtelnet
-RUN cd /tmp && \
-    git clone --branch 0.23 https://github.com/seanmiddleditch/libtelnet.git && \
-    cd /tmp/libtelnet                                                                  && \
-    autoreconf -i                                                                      && \
-    autoconf                                                                           && \
-    ./configure --prefix="$PREFIX_DIR" "$@"                                                                        && \
-    make                                                                               && \
-    make install 
+ARG LIBVNCCLIENT_OPTS=""
+
+ARG LIBWEBSOCKETS_OPTS="\
+    -DDISABLE_WERROR=ON \
+    -DLWS_WITHOUT_SERVER=ON \
+    -DLWS_WITHOUT_TESTAPPS=ON \
+    -DLWS_WITHOUT_TEST_CLIENT=ON \
+    -DLWS_WITHOUT_TEST_PING=ON \
+    -DLWS_WITHOUT_TEST_SERVER=ON \
+    -DLWS_WITHOUT_TEST_SERVER_EXTPOLL=ON \
+    -DLWS_WITH_STATIC=OFF"
 
 # Build guacamole-server and its core protocol library dependencies
-RUN cd /tmp && \
-git clone --branch=${GUAC_VER} https://github.com/apache/guacamole-server.git guacamole-server && \
-cd guacamole-server && \
-autoreconf -fi && \
-autoconf && \
-./configure --prefix="$PREFIX_DIR" $GUACAMOLE_SERVER_OPTS && \
-make && \
-make install 
+RUN echo "$TARGETPLATFORM"
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
+    then FREERDP_OPTS="${FREERDP_OPTS_COMMON}    -DWITH_SSE2=ON" && echo "SSE2 active"; \
+    else FREERDP_OPTS="${FREERDP_OPTS_COMMON}    -DWITH_SSE2=OFF" && echo "SSE2 disabled"; \
+    fi && \
+${BUILD_DIR}/src/guacd-docker/bin/build-all.sh
+
+# Record the packages of all runtime library dependencies
+RUN ${BUILD_DIR}/src/guacd-docker/bin/list-dependencies.sh \
+        ${PREFIX_DIR}/sbin/guacd               \
+        ${PREFIX_DIR}/lib/libguac-client-*.so  \
+        ${PREFIX_DIR}/lib/freerdp2/*guac*.so   \
+        > ${PREFIX_DIR}/DEPENDENCIES
+
 
 # Use same Alpine version as the base for the runtime image
 FROM alpine:${ALPINE_BASE_IMAGE}
 
 ARG PREFIX_DIR=/opt/guacamole
+
+ARG APPLICATION="guacamole"
+ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
+ARG REVISION="local"
+ARG DESCRIPTION="Guacamole 1.5.0"
+ARG PACKAGE="MaxWaldorf/guacamole"
 ARG VERSION="1.5.0"
 ARG POSTGRES_HOST_AUTH_METHOD="trust"
+
+LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
+  org.opencontainers.image.created=$BUILD_RFC3339 \
+  org.opencontainers.image.authors="MaxWaldorf" \
+  org.opencontainers.image.documentation="https://github.com/${PACKAGE}/README.md" \
+  org.opencontainers.image.description="${DESCRIPTION}" \
+  org.opencontainers.image.licenses="GPLv3" \
+  org.opencontainers.image.source="https://github.com/${PACKAGE}" \
+  org.opencontainers.image.revision=$REVISION \
+  org.opencontainers.image.version=$VERSION \
+  org.opencontainers.image.url="https://hub.docker.com/r/${PACKAGE}/"
 
 ENV \
   GUAC_VER=${VERSION} \
@@ -141,12 +182,6 @@ ENV \
   POSTGRES_DB=guacamole_db \
   POSTGRES_HOST_AUTH_METHOD=${POSTGRES_HOST_AUTH_METHOD}
 
-# Set working DIR
-RUN mkdir -p /config
-RUN mkdir -p ${GUACAMOLE_HOME}/extensions ${GUACAMOLE_HOME}/extensions-available ${GUACAMOLE_HOME}/lib
-RUN mkdir /docker-entrypoint-initdb.d
-WORKDIR ${GUACAMOLE_HOME}
-
 # Runtime environment
 ENV LC_ALL=C.UTF-8
 ENV LD_LIBRARY_PATH=${PREFIX_DIR}/lib
@@ -155,37 +190,28 @@ ENV GUACD_LOG_LEVEL=info
 # Copy build artifacts into this stage
 COPY --from=builder ${PREFIX_DIR} ${PREFIX_DIR}
 
+# Set working DIR
+RUN mkdir -p /config
+RUN mkdir -p ${GUACAMOLE_HOME}/extensions ${GUACAMOLE_HOME}/extensions-available ${GUACAMOLE_HOME}/lib
+RUN mkdir /docker-entrypoint-initdb.d
+WORKDIR ${GUACAMOLE_HOME}
+
 # Bring runtime environment up to date and install runtime dependencies
 RUN apk add --no-cache                \
         bash                          \
         bash-completion               \
-        curl                          \
-        netcat-openbsd                \
         ca-certificates               \
+        curl                          \
         ghostscript                   \
+        netcat-openbsd                \
         openjdk11-jdk                 \
         postgresql13                  \
-        netcat-openbsd                \
         shadow                        \
         terminus-font                 \
         ttf-dejavu                    \
         ttf-liberation                \
-        util-linux-login              \
-        cairo                         \
-        libjpeg-turbo                 \
-        libpng                        \
-        pango                         \
-        libssh2                       \
-        libvncserver                  \
-        openssl                       \
-        libvorbis                     \
-        libwebp                       \
-        libsndfile                    \
-        pulseaudio                    \
-        libusb                        \
-        freerdp                       \
-        libwebsockets                 \
-        util-linux
+        util-linux-login && \
+    xargs apk add --no-cache < ${PREFIX_DIR}/DEPENDENCIES
 
 RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu 
 
@@ -276,6 +302,8 @@ RUN sed -i -e 's/\r$//' /usr/local/bin/*.sh
 RUN sed -i -e 's/\r$//' /startup.sh
 
 SHELL ["/bin/bash", "-c"]
+
+STOPSIGNAL SIGINT
 
 # Docker Startup Scripts
 WORKDIR /
