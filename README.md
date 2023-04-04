@@ -1,4 +1,4 @@
-[![Docker Image CI](https://github.com/MaxWaldorf/guacamole/actions/workflows/docker-image.yml/badge.svg)](https://github.com/MaxWaldorf/guacamole/actions/workflows/docker-image.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/maxwaldorf/guacamole.svg)](https://hub.docker.com/r/maxwaldorf/guacamole/)
+[![Docker Image CI](https://github.com/flcontainers/guacamole/actions/workflows/docker-image.yml/badge.svg)](https://github.com/flcontainers/guacamole/actions/workflows/docker-image.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/flcontainers/guacamole.svg)](https://hub.docker.com/r/flcontainers/guacamole/)
 
 # Docker Guacamole
 
@@ -14,7 +14,7 @@ This container runs the guacamole web client, the guacd server and a postgres da
 docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
-  maxwaldorf/guacamole
+  flcontainers/guacamole
 ```
 
 ## Parameters
@@ -36,7 +36,7 @@ docker run \
   -p 8080:8080 \
   -v </path/to/config>:/config \
   -e "EXTENSIONS=auth-ldap,auth-duo"
-  maxwaldorf/guacamole
+  flcontainers/guacamole
 ```
 
 **Extension List:**
@@ -71,7 +71,7 @@ Mapped volumes behave differently when running Docker for Windows and you may en
 version: "2"
 services:
   guacamole:
-    image: maxwaldorf/guacamole
+    image: flcontainers/guacamole
     container_name: guacamole
     volumes:
       - postgres:/config
