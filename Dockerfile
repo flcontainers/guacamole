@@ -154,10 +154,10 @@ FROM alpine:${ALPINE_BASE_IMAGE}
 ARG PREFIX_DIR=/opt/guacamole
 
 ARG APPLICATION="guacamole"
-ARG BUILD_RFC3339="2023-03-17T15:00:00Z"
+ARG BUILD_RFC3339="2023-04-04T13:00:00Z"
 ARG REVISION="local"
-ARG DESCRIPTION="Guacamole 1.5.0"
-ARG PACKAGE="MaxWaldorf/guacamole"
+ARG DESCRIPTION="Fully Pacaged and Multi-Arch Guacamole container"
+ARG PACKAGE="flcontainers/guacamole"
 ARG VERSION="1.5.0"
 ARG POSTGRES_HOST_AUTH_METHOD="trust"
 
