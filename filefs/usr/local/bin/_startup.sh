@@ -1,8 +1,15 @@
 #!/bin/sh
 echo "Preparing Config Folder"
+if [ -d "/config/" ]; then
+  rm -r /config/extensions
+  rm -r /config/extensions-available
+  rm -r /config/lib
+  rm -r /config/schema
+fi
 cp -rn /app/guacamole /config
 mkdir -p /root/.config/freerdp/known_hosts
 chown -R tomcat:tomcat /config/guacamole
+chown -R tomcat:tomcat /opt/tomcat # Might help to fix issues with bug on tomcat logs
 
 # Own postgres folder if exist (change to alpine)
 if [ -d "/config/postgres/" ]; then
