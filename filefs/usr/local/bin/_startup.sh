@@ -1,10 +1,10 @@
 #!/bin/sh
 echo "Preparing Config Folder"
-if [ -d "/config/" ]; then
-  rm -r /config/extensions
-  rm -r /config/extensions-available
-  rm -r /config/lib
-  rm -r /config/schema
+if [ -d "/config/guacamole/" ]; then
+  rm -r /config/guacamole/extensions
+  rm -r /config/guacamole/extensions-available
+  rm -r /config/guacamole/lib
+  rm -r /config/guacamole/schema
 fi
 cp -rn /app/guacamole /config
 mkdir -p /root/.config/freerdp/known_hosts
