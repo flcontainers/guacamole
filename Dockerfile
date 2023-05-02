@@ -1,13 +1,13 @@
 ARG ALPINE_BASE_IMAGE=latest
 FROM alpine:${ALPINE_BASE_IMAGE} AS builder
 
-ARG VERSION="1.5.0"
+ARG VERSION="1.5.1"
 ARG TARGETPLATFORM
 
 ENV \
   GUAC_VER=${VERSION}
 
-# Install build dependencies (Note: ffmpeg4 because of bug in 1.5.0 will be fixed in 1.5.1+)
+# Install build dependencies
 RUN apk add --no-cache                \
         alsa-lib-dev                  \
         alsa-tools-dev                \
@@ -161,7 +161,7 @@ ARG BUILD_RFC3339="2023-04-04T13:00:00Z"
 ARG REVISION="local"
 ARG DESCRIPTION="Fully Pacaged and Multi-Arch Guacamole container"
 ARG PACKAGE="flcontainers/guacamole"
-ARG VERSION="1.5.0"
+ARG VERSION="1.5.1"
 ARG POSTGRES_HOST_AUTH_METHOD="trust"
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
@@ -222,8 +222,8 @@ RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gos
 
 # Install tomcat
 RUN mkdir /opt/tomcat
-ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.73/bin/apache-tomcat-9.0.73.tar.gz /tmp/
-RUN tar xvzf /tmp/apache-tomcat-9.0.73.tar.gz --strip-components 1 --directory /opt/tomcat
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.74/bin/apache-tomcat-9.0.74.tar.gz /tmp/
+RUN tar xvzf /tmp/apache-tomcat-9.0.74.tar.gz --strip-components 1 --directory /opt/tomcat
 RUN chmod +x /opt/tomcat/bin/*.sh
 
 RUN groupadd tomcat && \
