@@ -1,8 +1,19 @@
 #!/bin/sh
 echo "Preparing Config Folder"
+if [ -d "/config/guacamole/" ]; then
+  rm -r /config/guacamole/extensions
+  rm -r /config/guacamole/extensions-available
+  rm -r /config/guacamole/lib
+  rm -r /config/guacamole/schema
+  cp -r /app/guacamole/extensions /config/guacamole
+  cp -r /app/guacamole/extensions-available /config/guacamole
+  cp -r /app/guacamole/lib /config/guacamole
+  cp -r /app/guacamole/schema /config/guacamole
+fi
 cp -rn /app/guacamole /config
 mkdir -p /root/.config/freerdp/known_hosts
 chown -R tomcat:tomcat /config/guacamole
+chown -R tomcat:tomcat /opt/tomcat # Might help to fix issues with bug on tomcat logs
 
 # Own postgres folder if exist (change to alpine)
 if [ -d "/config/postgres/" ]; then
