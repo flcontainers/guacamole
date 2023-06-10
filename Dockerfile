@@ -1,7 +1,7 @@
 ARG ALPINE_BASE_IMAGE=latest
 FROM alpine:${ALPINE_BASE_IMAGE} AS builder
 
-ARG VERSION="1.5.1"
+ARG VERSION="1.5.2"
 ARG TARGETPLATFORM
 
 ENV \
@@ -161,7 +161,7 @@ ARG BUILD_RFC3339="2023-04-04T13:00:00Z"
 ARG REVISION="local"
 ARG DESCRIPTION="Fully Packaged and Multi-Arch Guacamole container"
 ARG PACKAGE="flcontainers/guacamole"
-ARG VERSION="1.5.1"
+ARG VERSION="1.5.2"
 ARG POSTGRES_HOST_AUTH_METHOD="trust"
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
