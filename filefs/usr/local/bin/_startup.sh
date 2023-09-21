@@ -1,11 +1,24 @@
 #!/bin/sh
 echo "Preparing Config Folder"
 if [ -d "/config/guacamole/" ]; then
-  rm -r /config/guacamole/extensions
+  rm /config/guacamole/extensions/guacamole-auth-duo-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-header-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-jdbc-mysql-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-jdbc-postgresql-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-jdbc-sqlserver-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-json-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-ldap-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-quickconnect-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-sso-openid-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-sso-saml-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-sso-cas-*.jar
+  rm /config/guacamole/extensions/guacamole-auth-totp-*.jar
+  rm /config/guacamole/extensions/guacamole-vault-ksm-*.jar
+  rm /config/guacamole/extensions/guacamole-history-recording-storage-*.jar
   rm -r /config/guacamole/extensions-available
   rm -r /config/guacamole/lib
   rm -r /config/guacamole/schema
-  cp -r /app/guacamole/extensions /config/guacamole
+  cp -r /app/guacamole/extensions/*.jar /config/guacamole/extensions
   cp -r /app/guacamole/extensions-available /config/guacamole
   cp -r /app/guacamole/lib /config/guacamole
   cp -r /app/guacamole/schema /config/guacamole

@@ -1,7 +1,7 @@
 ARG ALPINE_BASE_IMAGE=latest
 FROM alpine:${ALPINE_BASE_IMAGE} AS builder
 
-ARG VERSION="1.5.2"
+ARG VERSION="1.5.3"
 ARG TARGETPLATFORM
 
 ENV \
@@ -161,7 +161,7 @@ ARG BUILD_RFC3339="2023-04-04T13:00:00Z"
 ARG REVISION="local"
 ARG DESCRIPTION="Fully Packaged and Multi-Arch Guacamole container"
 ARG PACKAGE="flcontainers/guacamole"
-ARG VERSION="1.5.2"
+ARG VERSION="1.5.3"
 ARG POSTGRES_HOST_AUTH_METHOD="trust"
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
@@ -222,8 +222,8 @@ RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gos
 
 # Install tomcat
 RUN mkdir /opt/tomcat
-ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.76/bin/apache-tomcat-9.0.76.tar.gz /tmp/
-RUN tar xvzf /tmp/apache-tomcat-9.0.76.tar.gz --strip-components 1 --directory /opt/tomcat
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.80/bin/apache-tomcat-9.0.80.tar.gz /tmp/
+RUN tar xvzf /tmp/apache-tomcat-9.0.80.tar.gz --strip-components 1 --directory /opt/tomcat
 RUN chmod +x /opt/tomcat/bin/*.sh
 
 RUN groupadd tomcat && \
@@ -232,7 +232,8 @@ useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
 RUN chgrp -R tomcat /opt/tomcat && \
 chmod -R g+r /opt/tomcat/conf && \
 chmod g+x /opt/tomcat/conf && \
-chown -R tomcat /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/
+chown -R tomcat /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/ && \
+chmod 777 -R /opt/tomcat/logs/
 
 # Install guacamole-client and postgres auth adapter
 RUN set -x \
