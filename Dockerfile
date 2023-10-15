@@ -180,6 +180,7 @@ ENV \
   GUACAMOLE_HOME=/app/guacamole \
   CATALINA_HOME=/opt/tomcat \
   PG_MAJOR=13 \
+  TOMCAT_VER=9.0.82 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db \
@@ -222,8 +223,8 @@ RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gos
 
 # Install tomcat
 RUN mkdir /opt/tomcat
-ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.80/bin/apache-tomcat-9.0.82.tar.gz /tmp/
-RUN tar xvzf /tmp/apache-tomcat-9.0.82.tar.gz --strip-components 1 --directory /opt/tomcat
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz /tmp/
+RUN tar xvzf /tmp/apache-tomcat-${TOMCAT_VER}.tar.gz --strip-components 1 --directory /opt/tomcat
 RUN chmod +x /opt/tomcat/bin/*.sh
 
 RUN groupadd tomcat && \
