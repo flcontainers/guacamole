@@ -32,7 +32,7 @@ RUN apk add --no-cache                \
         libxkbfile-dev                \
         make                          \
         openh264-dev                  \
-        openssl1.1-compat-dev         \
+        openssl-dev                   \
         pango-dev                     \
         pcsc-lite-dev                 \
         pulseaudio-dev                \
