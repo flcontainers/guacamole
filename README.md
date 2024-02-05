@@ -59,7 +59,7 @@ docker run \
 - vault-ksm
 - history-recording-storage
 
-More information: [Guacamole v1.5.3 release notes](https://guacamole.apache.org/releases/1.5.3/)
+More information: [Guacamole release notes](https://guacamole.apache.org/releases/)
 
 You should only enable the extensions you require, if an extensions is not configured correctly in the `guacamole.properties` file it may prevent the system from loading. See the [official documentation](https://guacamole.apache.org/doc/gug/) for more details.
 
