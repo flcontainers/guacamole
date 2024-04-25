@@ -180,7 +180,7 @@ ENV \
   GUACAMOLE_HOME=/app/guacamole \
   CATALINA_HOME=/opt/tomcat \
   PG_MAJOR=13 \
-  TOMCAT_VER=9.0.85 \
+  TOMCAT_VER=9.0.88 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db \
