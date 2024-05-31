@@ -180,7 +180,7 @@ ENV \
   GUACAMOLE_HOME=/app/guacamole \
   CATALINA_HOME=/opt/tomcat \
   PG_MAJOR=13 \
-  TOMCAT_VER=9.0.83 \
+  TOMCAT_VER=9.0.89 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db \
@@ -210,7 +210,7 @@ RUN apk add --no-cache                \
         ghostscript                   \
         netcat-openbsd                \
         openjdk11-jdk                 \
-        postgresql13                  \
+        postgresql16                  \
         shadow                        \
         terminus-font                 \
         ttf-dejavu                    \
