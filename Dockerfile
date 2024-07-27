@@ -1,8 +1,11 @@
-ARG ALPINE_BASE_IMAGE=latest
+ARG ALPINE_BASE_IMAGE=3.19
 FROM alpine:${ALPINE_BASE_IMAGE} AS builder
 
-ARG VERSION="1.5.4"
+ARG VERSION="1.5.5"
 ARG TARGETPLATFORM
+
+# FreeRDP version (default to version 3)
+ARG FREERDP_VERSION=2
 
 ENV \
   GUAC_VER=${VERSION}
@@ -15,15 +18,14 @@ RUN apk add --no-cache                \
         automake                      \
         build-base                    \
         cairo-dev                     \
+        cjson-dev                     \
         cmake                         \
         cups-dev                      \
-        faac-dev                      \
-        faad2-dev                     \
+        cunit-dev                     \
         ffmpeg4-dev                   \
         git                           \
         grep                          \
-        gsm-dev                       \
-        gstreamer-dev                 \
+        krb5-dev                      \
         libjpeg-turbo-dev             \
         libpng-dev                    \
         libtool                       \
@@ -31,21 +33,20 @@ RUN apk add --no-cache                \
         libwebp-dev                   \
         libxkbfile-dev                \
         make                          \
-        openh264-dev                  \
         openssl-dev                   \
         pango-dev                     \
         pcsc-lite-dev                 \
         pulseaudio-dev                \
-        util-linux-dev
+        sdl2-dev                      \
+        sdl2_ttf-dev                  \
+        util-linux-dev                \
+        webkit2gtk-dev
 
 
 # Copy source to container for sake of build
 ARG BUILD_DIR=/tmp/guacamole-server
 RUN cd /tmp && \
 git clone --branch=${GUAC_VER} https://github.com/apache/guacamole-server.git guacamole-server
-
-# replace libwebsockets repo (original repo failed many times)
-RUN sed -i 's#https://libwebsockets.org/repo/libwebsockets#https://github.com/warmcat/libwebsockets#g' ${BUILD_DIR}/src/guacd-docker/bin/build-all.sh
 
 #
 # Base directory for installed build artifacts.
@@ -60,7 +61,7 @@ ARG PREFIX_DIR=/opt/guacamole
 # library (these can be overridden at build time if a specific version is
 # needed)
 #
-ARG WITH_FREERDP='2(\.\d+)+'
+ARG WITH_FREERDP="${FREERDP_VERSION}(\.\d+)+"
 ARG WITH_LIBSSH2='libssh2-\d+(\.\d+)+'
 ARG WITH_LIBTELNET='\d+(\.\d+)+'
 ARG WITH_LIBVNCCLIENT='LibVNCServer-\d+(\.\d+)+'
@@ -75,30 +76,32 @@ ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
 ARG FREERDP_OPTS_COMMON="\
     -DBUILTIN_CHANNELS=OFF \
     -DCHANNEL_URBDRC=OFF \
-    -DWITH_ALSA=ON \
+    -DWITH_ALSA=OFF \
     -DWITH_CAIRO=ON \
     -DWITH_CHANNELS=ON \
     -DWITH_CLIENT=ON \
     -DWITH_CUPS=ON \
     -DWITH_DIRECTFB=OFF \
-    -DWITH_FAAC=ON \
-    -DWITH_FAAD2=ON \
     -DWITH_FFMPEG=ON \
-    -DWITH_GSM=ON \
+    -DWITH_FUSE=OFF \
+    -DWITH_GSM=OFF \
     -DWITH_GSSAPI=OFF \
     -DWITH_IPP=OFF \
     -DWITH_JPEG=ON \
+    -DWITH_KRB5=ON \
     -DWITH_LIBSYSTEMD=OFF \
     -DWITH_MANPAGES=OFF \
-    -DWITH_OPENH264=N \
+    -DWITH_OPENH264=OFF \
     -DWITH_OPENSSL=ON \
     -DWITH_OSS=OFF \
     -DWITH_PCSC=ON \
-    -DWITH_PULSE=ON \
+    -DWITH_PKCS11=OFF \
+    -DWITH_PULSE=OFF \
     -DWITH_SERVER=OFF \
     -DWITH_SERVER_INTERFACE=OFF \
     -DWITH_SHADOW_MAC=OFF \
     -DWITH_SHADOW_X11=OFF \
+    -DWITH_SWSCALE=OFF \
     -DWITH_WAYLAND=OFF \
     -DWITH_X11=OFF \
     -DWITH_X264=OFF \
@@ -161,8 +164,7 @@ ARG BUILD_RFC3339="2023-04-04T13:00:00Z"
 ARG REVISION="local"
 ARG DESCRIPTION="Fully Packaged and Multi-Arch Guacamole container"
 ARG PACKAGE="flcontainers/guacamole"
-ARG VERSION="1.5.4"
-ARG POSTGRES_HOST_AUTH_METHOD="trust"
+ARG VERSION="1.5.5"
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
   org.opencontainers.image.created=$BUILD_RFC3339 \
@@ -180,11 +182,11 @@ ENV \
   GUACAMOLE_HOME=/app/guacamole \
   CATALINA_HOME=/opt/tomcat \
   PG_MAJOR=13 \
-  TOMCAT_VER=9.0.83 \
+  TOMCAT_VER=9.0.91 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db \
-  POSTGRES_HOST_AUTH_METHOD=${POSTGRES_HOST_AUTH_METHOD}
+  POSTGRES_HOST_AUTH_METHOD="trust"
 
 # Runtime environment
 ENV LC_ALL=C.UTF-8
@@ -210,7 +212,7 @@ RUN apk add --no-cache                \
         ghostscript                   \
         netcat-openbsd                \
         openjdk11-jdk                 \
-        postgresql13                  \
+        postgresql${PG_MAJOR}         \
         shadow                        \
         terminus-font                 \
         ttf-dejavu                    \
