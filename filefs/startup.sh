@@ -1,28 +1,25 @@
 #!/bin/sh
 
+# Create password if DB not initialized
+if [ -f "/config/postgres/PG_VERSION" ]; then
+  echo "DB exisit"
+  else
+    # Generate a random password for PostgreSQL
+    echo "Creating db password"
+    export POSTGRES_PASSWORD=$(pwgen -s 16 1)
+    echo -e "\npostgresql-password: $POSTGRES_PASSWORD" >> /app/guacamole/guacamole.properties
+fi
+
 echo "Running startup scripts"
 /usr/local/bin/_startup.sh
 
-echo "Running Postgres"
-/etc/init.d/postgres start
-
-echo "Running Guacamole server"
-bash -c '/opt/guacamole/sbin/guacd -b 0.0.0.0 -L $GUACD_LOG_LEVEL -f' &
+echo "Init DB Check"
+/usr/local/bin/_postgres.sh postgres &
 
 echo "Post startup DB scripts"
 gosu postgres bash -c '/usr/local/bin/_post_startup.sh'
 
-echo "Running Tomcat"
-# Wait for postgres to be ready
-while ! nc -z localhost 5432; do   
-  sleep 5
-done
-/etc/init.d/tomcat start
+echo "DB Preparation finished exiting for main processes..."
+gosu postgres /bin/sh -c 'pg_ctl -D "$PGDATA" -m fast -w stop'
 
-echo "container started"
-#tail -f /dev/null
-# Wait for any process to exit
-wait -n
-  
-# Exit with status of process that exited first
-exit $?
+exec /usr/bin/supervisord -c /etc/supervisord.conf

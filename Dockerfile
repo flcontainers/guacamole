@@ -185,8 +185,7 @@ ENV \
   TOMCAT_VER=9.0.91 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
-  POSTGRES_DB=guacamole_db \
-  POSTGRES_HOST_AUTH_METHOD="trust"
+  POSTGRES_DB=guacamole_db
 
 # Runtime environment
 ENV LC_ALL=C.UTF-8
@@ -213,7 +212,9 @@ RUN apk add --no-cache                \
         netcat-openbsd                \
         openjdk11-jdk                 \
         postgresql${PG_MAJOR}         \
+        pwgen                         \
         shadow                        \
+        supervisor                    \
         terminus-font                 \
         ttf-dejavu                    \
         ttf-liberation                \
@@ -223,20 +224,26 @@ RUN apk add --no-cache                \
 
 RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu 
 
+# Add user guacd
+RUN groupadd guacd && \
+useradd -s /bin/false -g guacd guacd
+
+RUN chown guacd:guacd -R ${PREFIX_DIR}
+
 # Install tomcat
-RUN mkdir /opt/tomcat
+RUN mkdir ${CATALINA_HOME}
 ADD https://dlcdn.apache.org/tomcat/tomcat-9/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz /tmp/
-RUN tar xvzf /tmp/apache-tomcat-${TOMCAT_VER}.tar.gz --strip-components 1 --directory /opt/tomcat
-RUN chmod +x /opt/tomcat/bin/*.sh
+RUN tar xvzf /tmp/apache-tomcat-${TOMCAT_VER}.tar.gz --strip-components 1 --directory ${CATALINA_HOME}
+RUN chmod +x ${CATALINA_HOME}/bin/*.sh
 
 RUN groupadd tomcat && \
-useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+useradd -s /bin/false -g tomcat -d ${CATALINA_HOME} tomcat
 
-RUN chgrp -R tomcat /opt/tomcat && \
-chmod -R g+r /opt/tomcat/conf && \
-chmod g+x /opt/tomcat/conf && \
-chown -R tomcat /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/ && \
-chmod 777 -R /opt/tomcat/logs/
+RUN chgrp -R tomcat ${CATALINA_HOME} && \
+chmod -R g+r ${CATALINA_HOME}/conf && \
+chmod g+x ${CATALINA_HOME}/conf && \
+chown -R tomcat ${CATALINA_HOME}/webapps/ ${CATALINA_HOME}/work/ ${CATALINA_HOME}/temp/ ${CATALINA_HOME}/logs/ && \
+chmod 777 -R ${CATALINA_HOME}/logs/
 
 # Install guacamole-client and postgres auth adapter
 RUN set -x \
@@ -301,23 +308,24 @@ ENV GUACAMOLE_HOME=/config/guacamole
 # Copy files
 COPY filefs /
 RUN chmod +x /usr/local/bin/*.sh
-RUN chmod +x /etc/init.d/tomcat
-RUN chmod +x /etc/init.d/postgres
 RUN chmod +x /startup.sh
 
-# Hack for windows based host (CRLF / LF)
-RUN sed -i -e 's/\r$//' /etc/init.d/*
-RUN sed -i -e 's/\r$//' /usr/local/bin/*.sh
-RUN sed -i -e 's/\r$//' /startup.sh
+# Copy Scripts
+COPY scripts/tomcat ${CATALINA_HOME}/bin
+RUN chown tomcat:tomcat ${CATALINA_HOME}/bin/wrapper_supervisor.sh
+RUN chmod +x ${CATALINA_HOME}/bin/wrapper_supervisor.sh
 
-SHELL ["/bin/bash", "-c"]
+COPY scripts/guacd ${PREFIX_DIR}
+RUN chown guacd:guacd ${PREFIX_DIR}/wrapper_supervisor.sh
+RUN chmod +x ${PREFIX_DIR}/wrapper_supervisor.sh
 
-STOPSIGNAL SIGINT
-
-# Docker Startup Scripts
-WORKDIR /
-CMD ["/startup.sh"]
+COPY scripts/postgres /config/scripts
+RUN chown guacd:guacd /config/scripts/wrapper_supervisor.sh
+RUN chmod +x /config/scripts/wrapper_supervisor.sh
 
 EXPOSE 8080
 
 WORKDIR /config
+
+# Set the entrypoint
+ENTRYPOINT ["/startup.sh"]
