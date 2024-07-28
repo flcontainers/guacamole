@@ -319,9 +319,11 @@ COPY scripts/guacd ${PREFIX_DIR}
 RUN chown guacd:guacd ${PREFIX_DIR}/wrapper_supervisor.sh
 RUN chmod +x ${PREFIX_DIR}/wrapper_supervisor.sh
 
-COPY scripts/postgres /config/scripts
-RUN chown guacd:guacd /config/scripts/wrapper_supervisor.sh
-RUN chmod +x /config/scripts/wrapper_supervisor.sh
+RUN mkdir -p /scripts/postgres
+RUN chmod 755 -R /scripts
+COPY scripts/postgres /scripts/postgres
+RUN chown postgres:postgres -R /scripts/postgres
+RUN chmod +x /scripts/postgres/wrapper_supervisor.sh
 
 EXPOSE 8080
 
