@@ -5,17 +5,19 @@ function shutdown()
     date
     echo "Shutting down Postgresql"
 
-    /bin/sh -c 'pg_ctl -D "$PGDATA" -m fast -w stop'
+    pg_ctl -m fast -w stop
 
 }
 
 date
 echo "Starting Postgresql"
-/usr/bin/postgres
 
+postgres
 
-# Allow any signal which would kill a process to stop GUACD
-trap shutdown HUP INT QUIT ABRT KILL ALRM TERM TSTP
+sleep 5
 
-echo "Waiting for `cat $POSTGRES_PID`"
+# Allow any signal which would kill a process to stop Postgres
+trap shutdown HUP INT QUIT ABRT KILL ALRM TERM TSTP SIGTERM SIGINT
+
+echo "Waiting for `head -1 $POSTGRES_PID`"
 wait `cat $POSTGRES_PID`

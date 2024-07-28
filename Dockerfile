@@ -304,6 +304,8 @@ RUN set -xe \
 # Finishing Container configuration
 ENV PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
 ENV GUACAMOLE_HOME=/config/guacamole
+ENV CATALINA_PID=${CATALINA_HOME}/tomcat.pid
+ENV POSTGRES_PID=/config/postgresql/postmaster.pid
 
 # Copy files
 COPY filefs /
@@ -324,6 +326,13 @@ RUN chmod 755 -R /scripts
 COPY scripts/postgres /scripts/postgres
 RUN chown postgres:postgres -R /scripts/postgres
 RUN chmod +x /scripts/postgres/wrapper_supervisor.sh
+
+# Prepare logs folder for supervisor
+RUN mkdir -p /var/log/supervisor
+RUN chmod 755 -R /var/log/supervisor
+
+# Stop Signal type
+STOPSIGNAL SIGTERM
 
 EXPOSE 8080
 
