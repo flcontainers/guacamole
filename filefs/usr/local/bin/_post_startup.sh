@@ -1,12 +1,9 @@
 #!/bin/sh
 
-# Wait a few seconds before init
-sleep 15
-
 # Wait for postgres to be ready
 while ! nc -z localhost 5432; do
-  echo "Guacamole client waiting for DB"   
-  sleep 5
+echo "Guacamole client waiting for DB"   
+sleep 5
 done
 
 echo "database port open... Finishing Configuration"
