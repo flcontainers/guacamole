@@ -228,7 +228,6 @@ RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gos
 RUN groupadd guacd && \
 useradd -s /bin/false -g guacd guacd
 RUN chown guacd:guacd -R ${PREFIX_DIR}
-RUN chown guacd:guacd -R ${GUACAMOLE_HOME}
 
 # Install tomcat
 RUN mkdir ${CATALINA_HOME}
@@ -302,11 +301,13 @@ RUN set -xe \
 ###############################################################################
 
 # Finishing Container configuration
+RUN chown tomcat:tomcat -R ${GUACAMOLE_HOME}
+
 ENV PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
 ENV GUACAMOLE_HOME=/config/guacamole
 ENV CATALINA_PID=${CATALINA_HOME}/tomcat.pid
 ENV POSTGRES_PID=/config/postgresql/postmaster.pid
-ENV GUACD_PID=/config/guacamole/guacd.pid
+ENV GUACD_PID=${PREFIX_DIR}/guacd.pid
 
 # Copy files
 COPY filefs /
