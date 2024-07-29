@@ -196,10 +196,16 @@ ENV TZ=UTC
 # Copy build artifacts into this stage
 COPY --from=builder ${PREFIX_DIR} ${PREFIX_DIR}
 
+# Add user guacd
+RUN groupadd guacd && \
+useradd -s /bin/false -g guacd guacd
+
 # Set working DIR
 RUN mkdir -p /config
 RUN mkdir -p ${GUACAMOLE_HOME}/extensions ${GUACAMOLE_HOME}/extensions-available ${GUACAMOLE_HOME}/lib
 RUN mkdir /docker-entrypoint-initdb.d
+RUN chown guacd:guacd -R ${PREFIX_DIR}
+RUN chown guacd:guacd -R ${GUACAMOLE_HOME}
 WORKDIR ${GUACAMOLE_HOME}
 
 # Bring runtime environment up to date and install runtime dependencies
@@ -222,13 +228,7 @@ RUN apk add --no-cache                \
         util-linux-login && \
     xargs apk add --no-cache < ${PREFIX_DIR}/DEPENDENCIES
 
-RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu 
-
-# Add user guacd
-RUN groupadd guacd && \
-useradd -s /bin/false -g guacd guacd
-
-RUN chown guacd:guacd -R ${PREFIX_DIR}
+RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu
 
 # Install tomcat
 RUN mkdir ${CATALINA_HOME}

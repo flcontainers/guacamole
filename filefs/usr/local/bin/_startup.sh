@@ -25,7 +25,7 @@ if [ -d "/config/guacamole/" ]; then
 fi
 cp -rn /app/guacamole /config
 mkdir -p /root/.config/freerdp/known_hosts
-chown -R tomcat:tomcat /config/guacamole
+chown -R guacd:guacd /config/guacamole
 chown -R tomcat:tomcat /opt/tomcat # Might help to fix issues with bug on tomcat logs
 
 # Own postgres folder if exist (change to alpine)
