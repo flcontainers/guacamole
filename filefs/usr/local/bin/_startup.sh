@@ -24,7 +24,8 @@ if [ -d "/config/guacamole/" ]; then
   cp -r /app/guacamole/schema /config/guacamole
 fi
 cp -rn /app/guacamole /config
-mkdir -p /root/.config/freerdp/known_hosts
+mkdir -p /home/guacd/.config/freerdp
+chown -R guacd:guacd /home/guacd/.config/freerdp
 chown -R tomcat:tomcat /config/guacamole
 chown -R tomcat:tomcat /opt/tomcat # Might help to fix issues with bug on tomcat logs
 

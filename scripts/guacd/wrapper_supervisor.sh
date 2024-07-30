@@ -9,7 +9,7 @@ function shutdown()
 
 date
 echo "Starting Guacd"
-
+HOME="/home/guacd"
 /opt/guacamole/sbin/guacd -b 0.0.0.0 -L $GUACD_LOG_LEVEL -p $GUACD_PID -f
 
 sleep 5
