@@ -6,12 +6,10 @@ on:
     - cron: '35 2 * * *'
   push:
     branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
 
 
 # permissions are needed if pushing to ghcr.io
-permissions: 
+permissions:
   packages: write
 
 jobs:
@@ -41,7 +39,9 @@ jobs:
           key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-multi-buildx
-        
+      
+      
+      
       # Push to Docker Hub
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
