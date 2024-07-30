@@ -11,36 +11,35 @@ ENV \
   GUAC_VER=${VERSION}
 
 # Install build dependencies
-RUN apk add --no-cache                \
-        alsa-lib-dev                  \
-        alsa-tools-dev                \
-        autoconf                      \
-        automake                      \
-        build-base                    \
-        cairo-dev                     \
-        cjson-dev                     \
-        cmake                         \
-        cups-dev                      \
-        cunit-dev                     \
-        ffmpeg4-dev                   \
-        git                           \
-        grep                          \
-        krb5-dev                      \
-        libjpeg-turbo-dev             \
-        libpng-dev                    \
-        libtool                       \
-        libusb-dev                    \
-        libwebp-dev                   \
-        libxkbfile-dev                \
-        make                          \
-        openssl-dev                   \
-        pango-dev                     \
-        pcsc-lite-dev                 \
-        pulseaudio-dev                \
-        sdl2-dev                      \
-        sdl2_ttf-dev                  \
-        util-linux-dev                \
-        webkit2gtk-dev
+RUN apk add --no-cache        \
+alsa-lib-dev                  \
+alsa-tools-dev                \
+autoconf                      \
+automake                      \
+build-base                    \
+cairo-dev                     \
+cmake                         \
+cups-dev                      \
+faac-dev                      \
+faad2-dev                     \
+ffmpeg4-dev                   \
+git                           \
+grep                          \
+gsm-dev                       \
+gstreamer-dev                 \
+libjpeg-turbo-dev             \
+libpng-dev                    \
+libtool                       \
+libusb-dev                    \
+libwebp-dev                   \
+libxkbfile-dev                \
+make                          \
+openh264-dev                  \
+openssl-dev                   \
+pango-dev                     \
+pcsc-lite-dev                 \
+pulseaudio-dev                \
+util-linux-dev
 
 
 # Copy source to container for sake of build
@@ -76,32 +75,28 @@ ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
 ARG FREERDP_OPTS_COMMON="\
     -DBUILTIN_CHANNELS=OFF \
     -DCHANNEL_URBDRC=OFF \
-    -DWITH_ALSA=OFF \
+    -DWITH_ALSA=ON \
     -DWITH_CAIRO=ON \
     -DWITH_CHANNELS=ON \
     -DWITH_CLIENT=ON \
     -DWITH_CUPS=ON \
     -DWITH_DIRECTFB=OFF \
     -DWITH_FFMPEG=ON \
-    -DWITH_FUSE=OFF \
-    -DWITH_GSM=OFF \
+    -DWITH_GSM=ON \
     -DWITH_GSSAPI=OFF \
     -DWITH_IPP=OFF \
     -DWITH_JPEG=ON \
-    -DWITH_KRB5=ON \
     -DWITH_LIBSYSTEMD=OFF \
     -DWITH_MANPAGES=OFF \
-    -DWITH_OPENH264=OFF \
+    -DWITH_OPENH264=ON \
     -DWITH_OPENSSL=ON \
     -DWITH_OSS=OFF \
     -DWITH_PCSC=ON \
-    -DWITH_PKCS11=OFF \
-    -DWITH_PULSE=OFF \
+    -DWITH_PULSE=ON \
     -DWITH_SERVER=OFF \
     -DWITH_SERVER_INTERFACE=OFF \
     -DWITH_SHADOW_MAC=OFF \
     -DWITH_SHADOW_X11=OFF \
-    -DWITH_SWSCALE=OFF \
     -DWITH_WAYLAND=OFF \
     -DWITH_X11=OFF \
     -DWITH_X264=OFF \
@@ -224,9 +219,12 @@ RUN apk add --no-cache                \
 
 RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu
 
-# Add user guacd
-RUN groupadd guacd && \
-useradd -s /bin/false -g guacd guacd
+# Create a new user guacd
+ARG UID=1000
+ARG GID=1000
+RUN groupadd --gid $GID guacd
+RUN useradd --system --create-home --shell /sbin/nologin --uid $UID --gid $GID guacd
+
 RUN chown guacd:guacd -R ${PREFIX_DIR}
 
 # Install tomcat
@@ -305,9 +303,9 @@ RUN chown tomcat:tomcat -R ${GUACAMOLE_HOME}
 
 ENV PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:$PATH
 ENV GUACAMOLE_HOME=/config/guacamole
-ENV CATALINA_PID=${CATALINA_HOME}/tomcat.pid
+ENV CATALINA_PID=/tmp/tomcat.pid
 ENV POSTGRES_PID=/config/postgresql/postmaster.pid
-ENV GUACD_PID=${PREFIX_DIR}/guacd.pid
+ENV GUACD_PID=/tmp/guacd.pid
 
 # Copy files
 COPY filefs /
