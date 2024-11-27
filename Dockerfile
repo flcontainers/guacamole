@@ -246,7 +246,7 @@ chmod 777 -R ${CATALINA_HOME}/logs/
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.6.0.jar "https://jdbc.postgresql.org/download/postgresql-42.6.0.jar" \
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.6.2.jar "https://jdbc.postgresql.org/download/postgresql-42.6.2.jar" \
   && curl -SLo ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}.tar.gz "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
   && tar -xzf ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
   && cp -R ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
