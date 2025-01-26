@@ -1,8 +1,11 @@
 ARG ALPINE_BASE_IMAGE=3.19
-FROM alpine:${ALPINE_BASE_IMAGE} AS builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+# Use buildx native support for multi-arch builds
+FROM --platform=$TARGETPLATFORM alpine:${ALPINE_BASE_IMAGE} AS builder
 
 ARG VERSION="1.5.5"
-ARG TARGETPLATFORM
 
 # FreeRDP version (default to version 3)
 ARG FREERDP_VERSION=2
@@ -135,10 +138,20 @@ ARG LIBWEBSOCKETS_OPTS="\
 
 # Build guacamole-server and its core protocol library dependencies
 RUN echo "$TARGETPLATFORM"
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
-    then FREERDP_OPTS="${FREERDP_OPTS_COMMON}    -DWITH_SSE2=ON" && echo "SSE2 active"; \
-    else FREERDP_OPTS="${FREERDP_OPTS_COMMON}    -DWITH_SSE2=OFF" && echo "SSE2 disabled"; \
-    fi && \
+RUN case "${TARGETPLATFORM}" in \
+    "linux/amd64") \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=ON" \
+        ;; \
+    "linux/arm64") \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_NEON=ON" \
+        ;; \
+    "linux/ppc64le") \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_ALTIVEC=ON" \
+        ;; \
+    *) \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON}" \
+        ;; \
+    esac && \
 ${BUILD_DIR}/src/guacd-docker/bin/build-all.sh
 
 # Record the packages of all runtime library dependencies

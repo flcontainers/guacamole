@@ -1,63 +1,64 @@
 name: Docker Image CI for dev
 
 on:
-# Controls when the workflow will run
   schedule:
     - cron: '35 2 * * *'
   push:
     branches: [ dev ]
 
-
-# permissions are needed if pushing to ghcr.io
 permissions:
   packages: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64, linux/ppc64le]
+      # Don't cancel other platforms if one fails
+      fail-fast: false
+
     steps:
-      # Get the repository's code
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: dev
-          
-      # https://github.com/docker/setup-qemu-action
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-        
-      # https://github.com/docker/setup-buildx-action
+        with:
+          platforms: ${{ matrix.platform }}
+
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          platforms: ${{ matrix.platform }}
+          driver-opts: |
+            image=moby/buildkit:latest
 
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          # Key is named differently to avoid collision
-          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}-${{ matrix.platform }}
           restore-keys: |
-            ${{ runner.os }}-multi-buildx
-      
-      
-      
-      # Push to Docker Hub
+            ${{ runner.os }}-buildx-${{ matrix.platform }}
+
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          
+
       - name: Docker meta
-        id: guac
+        id: meta
         uses: docker/metadata-action@v5
         with:
-          # list of Docker images to use as base name for tags
           images: |
             flcontainers/guacamole
-          # Docker tags based on the following events/attributes
           tags: |
             type=schedule,pattern=testing
             type=raw,value=testing
@@ -68,15 +69,16 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64/v8,linux/ppc64le
+          platforms: ${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.guac.outputs.tags }}
-          labels: ${{ steps.guac.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          # Note the mode=max here
-          # More: https://github.com/moby/buildkit#--export-cache-options
-          # And: https://github.com/docker/buildx#--cache-tonametypetypekeyvalue
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          build-args: |
+            TARGETPLATFORM=${{ matrix.platform }}
+            BUILDPLATFORM=linux/amd64
+          outputs: type=registry
 
       - name: Move cache
         run: |
