@@ -1,4 +1,4 @@
-ARG ALPINE_BASE_IMAGE=3.18
+ARG ALPINE_BASE_IMAGE=3.19
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
@@ -14,35 +14,49 @@ ENV \
   GUAC_VER=${VERSION}
 
 # Install build dependencies
-RUN apk add --no-cache        \
-alsa-lib-dev                  \
-alsa-tools-dev                \
-autoconf                      \
-automake                      \
-build-base                    \
-cairo-dev                     \
-cmake                         \
-cups-dev                      \
-faac-dev                      \
-faad2-dev                     \
-ffmpeg4-dev                   \
-git                           \
-grep                          \
-gsm-dev                       \
-gstreamer-dev                 \
-libjpeg-turbo-dev             \
-libpng-dev                    \
-libtool                       \
-libusb-dev                    \
-libwebp-dev                   \
-libxkbfile-dev                \
-make                          \
-openh264-dev                  \
-openssl-dev                   \
-pango-dev                     \
-pcsc-lite-dev                 \
-pulseaudio-dev                \
-util-linux-dev
+RUN apk add --no-cache \
+alsa-lib-dev \
+alsa-tools-dev \
+autoconf \
+automake \
+bsd-compat-headers \
+build-base \
+cairo-dev \
+cmake \
+cups-dev \
+faac-dev \
+faad2-dev \
+ffmpeg4-dev \
+fuse3-dev \
+git \
+grep \
+gsm-dev \
+gst-plugins-base-dev \
+gstreamer-dev \
+krb5-dev \
+libjpeg-turbo-dev \
+libpng-dev \
+libtool \
+libusb-dev \
+libwebp-dev \
+libxcursor-dev \
+libxdamage-dev \
+libxi-dev \
+libxinerama-dev \
+libxkbcommon-dev \
+libxkbfile-dev \
+libxv-dev \
+linux-headers \
+make \
+openh264-dev \
+openssl-dev>3 \
+pango-dev \
+pcsc-lite-dev \
+pulseaudio-dev \
+samurai \
+uriparser-dev \
+util-linux-dev \
+wayland-dev
 
 
 # Copy source to container for sake of build
@@ -76,42 +90,15 @@ ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
 #
 
 ARG FREERDP_OPTS_COMMON="\
+    -DALLOW_IN_SOURCE_BUILD=ON \
     -DBUILTIN_CHANNELS=OFF \
-    -DCHANNEL_URBDRC=OFF \
-    -DWITH_ALSA=ON \
-    -DWITH_CAIRO=ON \
-    -DWITH_CHANNELS=ON \
-    -DWITH_CLIENT=ON \
-    -DWITH_CUPS=ON \
-    -DWITH_DIRECTFB=OFF \
-    -DWITH_FFMPEG=ON \
-    -DWITH_GSM=ON \
-    -DWITH_GSSAPI=OFF \
-    -DWITH_IPP=OFF \
     -DWITH_JPEG=ON \
-    -DWITH_LIBSYSTEMD=OFF \
-    -DWITH_MANPAGES=OFF \
     -DWITH_OPENH264=ON \
-    -DWITH_OPENSSL=ON \
-    -DWITH_OSS=OFF \
-    -DWITH_PCSC=ON \
-    -DWITH_PULSE=ON \
-    -DWITH_SERVER=OFF \
-    -DWITH_SERVER_INTERFACE=OFF \
-    -DWITH_SHADOW_MAC=OFF \
-    -DWITH_SHADOW_X11=OFF \
-    -DWITH_WAYLAND=OFF \
-    -DWITH_X11=OFF \
-    -DWITH_X264=OFF \
-    -DWITH_XCURSOR=ON \
-    -DWITH_XEXT=ON \
-    -DWITH_XI=OFF \
-    -DWITH_XINERAMA=OFF \
-    -DWITH_XKBFILE=ON \
-    -DWITH_XRENDER=OFF \
-    -DWITH_XTEST=OFF \
-    -DWITH_XV=OFF \
-    -DWITH_ZLIB=ON"
+    -DWITH_GSM=ON \
+    -DWITH_FAAD2=ON \
+    -DWITH_FAAC=ON \
+    -DWITH_GSSAPI=ON \
+    -DWITH_LIBSYSTEMD=OFF"
 
 ARG GUACAMOLE_SERVER_OPTS="\
     --disable-guaclog"
@@ -137,16 +124,15 @@ ARG LIBWEBSOCKETS_OPTS="\
     -DLWS_WITH_STATIC=OFF"
 
 # Build guacamole-server and its core protocol library dependencies
-RUN echo "$TARGETPLATFORM"
 RUN case "${TARGETPLATFORM}" in \
     "linux/amd64") \
         export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=ON" \
         ;; \
     "linux/arm64") \
-        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_NEON=ON" \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=OFF" \
         ;; \
     "linux/ppc64le") \
-        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_ALTIVEC=ON" \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=OFF" \
         ;; \
     *) \
         export FREERDP_OPTS="${FREERDP_OPTS_COMMON}" \
