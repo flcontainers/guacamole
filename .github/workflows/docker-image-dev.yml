@@ -2,7 +2,7 @@ name: Docker Image CI for dev
 
 on:
   schedule:
-    - cron: '35 2 * * *'
+    - cron: '35 2 * * 0'  # Runs every Sunday at 2:35 AM
   push:
     branches: [ dev ]
 
@@ -42,9 +42,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}-${{ matrix.platform }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}-${{ matrix.platform }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.platform }}
+            ${{ runner.os }}-buildx-${{ matrix.platform }}-
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
