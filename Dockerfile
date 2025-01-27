@@ -1,9 +1,9 @@
-ARG ALPINE_BASE_IMAGE=3.19
+ARG ALPINE_BASE_IMAGE=3.18
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
 # Use buildx native support for multi-arch builds
-FROM --platform=$TARGETPLATFORM alpine:${ALPINE_BASE_IMAGE} AS builder
+FROM alpine:${ALPINE_BASE_IMAGE} AS builder
 
 ARG VERSION="1.5.5"
 
