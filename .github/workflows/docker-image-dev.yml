@@ -12,11 +12,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        platform: [linux/amd64, linux/arm64, linux/ppc64le]
-      # Don't cancel other platforms if one fails
-      fail-fast: false
 
     steps:
       - name: Checkout
@@ -27,14 +22,14 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
         with:
           version: latest
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
           driver-opts: |
             image=moby/buildkit:latest
 
@@ -42,9 +37,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}-${{ matrix.platform }}-${{ github.run_id }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}-multi-arch-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.platform }}-
+            ${{ runner.os }}-buildx-multi-arch-
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
@@ -77,15 +72,12 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-          build-args: |
-            TARGETPLATFORM=${{ matrix.platform }}
-            BUILDPLATFORM=linux/amd64
           outputs: type=registry
 
       - name: Move cache
