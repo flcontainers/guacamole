@@ -1,8 +1,11 @@
 ARG ALPINE_BASE_IMAGE=3.19
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+# Use buildx native support for multi-arch builds
 FROM alpine:${ALPINE_BASE_IMAGE} AS builder
 
 ARG VERSION="1.5.5"
-ARG TARGETPLATFORM
 
 # FreeRDP version (default to version 3)
 ARG FREERDP_VERSION=2
@@ -11,35 +14,49 @@ ENV \
   GUAC_VER=${VERSION}
 
 # Install build dependencies
-RUN apk add --no-cache        \
-alsa-lib-dev                  \
-alsa-tools-dev                \
-autoconf                      \
-automake                      \
-build-base                    \
-cairo-dev                     \
-cmake                         \
-cups-dev                      \
-faac-dev                      \
-faad2-dev                     \
-ffmpeg4-dev                   \
-git                           \
-grep                          \
-gsm-dev                       \
-gstreamer-dev                 \
-libjpeg-turbo-dev             \
-libpng-dev                    \
-libtool                       \
-libusb-dev                    \
-libwebp-dev                   \
-libxkbfile-dev                \
-make                          \
-openh264-dev                  \
-openssl-dev                   \
-pango-dev                     \
-pcsc-lite-dev                 \
-pulseaudio-dev                \
-util-linux-dev
+RUN apk add --no-cache \
+alsa-lib-dev \
+alsa-tools-dev \
+autoconf \
+automake \
+bsd-compat-headers \
+build-base \
+cairo-dev \
+cmake \
+cups-dev \
+faac-dev \
+faad2-dev \
+ffmpeg4-dev \
+fuse3-dev \
+git \
+grep \
+gsm-dev \
+gst-plugins-base-dev \
+gstreamer-dev \
+krb5-dev \
+libjpeg-turbo-dev \
+libpng-dev \
+libtool \
+libusb-dev \
+libwebp-dev \
+libxcursor-dev \
+libxdamage-dev \
+libxi-dev \
+libxinerama-dev \
+libxkbcommon-dev \
+libxkbfile-dev \
+libxv-dev \
+linux-headers \
+make \
+openh264-dev \
+openssl-dev>3 \
+pango-dev \
+pcsc-lite-dev \
+pulseaudio-dev \
+samurai \
+uriparser-dev \
+util-linux-dev \
+wayland-dev
 
 
 # Copy source to container for sake of build
@@ -73,42 +90,15 @@ ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
 #
 
 ARG FREERDP_OPTS_COMMON="\
+    -DALLOW_IN_SOURCE_BUILD=ON \
     -DBUILTIN_CHANNELS=OFF \
-    -DCHANNEL_URBDRC=OFF \
-    -DWITH_ALSA=ON \
-    -DWITH_CAIRO=ON \
-    -DWITH_CHANNELS=ON \
-    -DWITH_CLIENT=ON \
-    -DWITH_CUPS=ON \
-    -DWITH_DIRECTFB=OFF \
-    -DWITH_FFMPEG=ON \
-    -DWITH_GSM=ON \
-    -DWITH_GSSAPI=OFF \
-    -DWITH_IPP=OFF \
     -DWITH_JPEG=ON \
-    -DWITH_LIBSYSTEMD=OFF \
-    -DWITH_MANPAGES=OFF \
     -DWITH_OPENH264=ON \
-    -DWITH_OPENSSL=ON \
-    -DWITH_OSS=OFF \
-    -DWITH_PCSC=ON \
-    -DWITH_PULSE=ON \
-    -DWITH_SERVER=OFF \
-    -DWITH_SERVER_INTERFACE=OFF \
-    -DWITH_SHADOW_MAC=OFF \
-    -DWITH_SHADOW_X11=OFF \
-    -DWITH_WAYLAND=OFF \
-    -DWITH_X11=OFF \
-    -DWITH_X264=OFF \
-    -DWITH_XCURSOR=ON \
-    -DWITH_XEXT=ON \
-    -DWITH_XI=OFF \
-    -DWITH_XINERAMA=OFF \
-    -DWITH_XKBFILE=ON \
-    -DWITH_XRENDER=OFF \
-    -DWITH_XTEST=OFF \
-    -DWITH_XV=OFF \
-    -DWITH_ZLIB=ON"
+    -DWITH_GSM=ON \
+    -DWITH_FAAD2=ON \
+    -DWITH_FAAC=ON \
+    -DWITH_GSSAPI=ON \
+    -DWITH_LIBSYSTEMD=OFF"
 
 ARG GUACAMOLE_SERVER_OPTS="\
     --disable-guaclog"
@@ -134,11 +124,20 @@ ARG LIBWEBSOCKETS_OPTS="\
     -DLWS_WITH_STATIC=OFF"
 
 # Build guacamole-server and its core protocol library dependencies
-RUN echo "$TARGETPLATFORM"
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; \
-    then FREERDP_OPTS="${FREERDP_OPTS_COMMON}    -DWITH_SSE2=ON" && echo "SSE2 active"; \
-    else FREERDP_OPTS="${FREERDP_OPTS_COMMON}    -DWITH_SSE2=OFF" && echo "SSE2 disabled"; \
-    fi && \
+RUN case "${TARGETPLATFORM}" in \
+    "linux/amd64") \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=ON" \
+        ;; \
+    "linux/arm64") \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=OFF" \
+        ;; \
+    "linux/ppc64le") \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=OFF" \
+        ;; \
+    *) \
+        export FREERDP_OPTS="${FREERDP_OPTS_COMMON}" \
+        ;; \
+    esac && \
 ${BUILD_DIR}/src/guacd-docker/bin/build-all.sh
 
 # Record the packages of all runtime library dependencies
@@ -177,7 +176,7 @@ ENV \
   GUACAMOLE_HOME=/app/guacamole \
   CATALINA_HOME=/opt/tomcat \
   PG_MAJOR=13 \
-  TOMCAT_VER=9.0.91 \
+  TOMCAT_VER=9.0.98 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
@@ -246,7 +245,7 @@ chmod 777 -R ${CATALINA_HOME}/logs/
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.6.0.jar "https://jdbc.postgresql.org/download/postgresql-42.6.0.jar" \
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.6.2.jar "https://jdbc.postgresql.org/download/postgresql-42.6.2.jar" \
   && curl -SLo ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}.tar.gz "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
   && tar -xzf ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
   && cp -R ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
