@@ -216,7 +216,7 @@ RUN apk add --no-cache                \
         util-linux-login && \
     xargs apk add --no-cache < ${PREFIX_DIR}/DEPENDENCIES
 
-RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/testing gosu
+RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/community gosu
 
 # Create a new user guacd
 ARG UID=1000
