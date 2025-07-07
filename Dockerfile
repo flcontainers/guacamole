@@ -1,164 +1,15 @@
-ARG ALPINE_BASE_IMAGE=3.19
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-
-# Use buildx native support for multi-arch builds
-FROM alpine:${ALPINE_BASE_IMAGE} AS builder
-
-ARG VERSION="1.5.5"
-
-# FreeRDP version (default to version 3)
-ARG FREERDP_VERSION=2
-
-ENV \
-  GUAC_VER=${VERSION}
-
-# Install build dependencies
-RUN apk add --no-cache \
-alsa-lib-dev \
-alsa-tools-dev \
-autoconf \
-automake \
-bsd-compat-headers \
-build-base \
-cairo-dev \
-cmake \
-cups-dev \
-faac-dev \
-faad2-dev \
-ffmpeg4-dev \
-fuse3-dev \
-git \
-grep \
-gsm-dev \
-gst-plugins-base-dev \
-gstreamer-dev \
-krb5-dev \
-libjpeg-turbo-dev \
-libpng-dev \
-libtool \
-libusb-dev \
-libwebp-dev \
-libxcursor-dev \
-libxdamage-dev \
-libxi-dev \
-libxinerama-dev \
-libxkbcommon-dev \
-libxkbfile-dev \
-libxv-dev \
-linux-headers \
-make \
-openh264-dev \
-openssl-dev>3 \
-pango-dev \
-pcsc-lite-dev \
-pulseaudio-dev \
-samurai \
-uriparser-dev \
-util-linux-dev \
-wayland-dev
-
-
-# Copy source to container for sake of build
-ARG BUILD_DIR=/tmp/guacamole-server
-RUN cd /tmp && \
-git clone --branch=${GUAC_VER} https://github.com/apache/guacamole-server.git guacamole-server
-
-#
-# Base directory for installed build artifacts.
-#
-# NOTE: Due to limitations of the Docker image build process, this value is
-# duplicated in an ARG in the second stage of the build.
-#
-ARG PREFIX_DIR=/opt/guacamole
-
-#
-# Automatically select the latest versions of each core protocol support
-# library (these can be overridden at build time if a specific version is
-# needed)
-#
-ARG WITH_FREERDP="${FREERDP_VERSION}(\.\d+)+"
-ARG WITH_LIBSSH2='libssh2-\d+(\.\d+)+'
-ARG WITH_LIBTELNET='\d+(\.\d+)+'
-ARG WITH_LIBVNCCLIENT='LibVNCServer-\d+(\.\d+)+'
-ARG WITH_LIBWEBSOCKETS='v\d+(\.\d+)+'
-
-#
-# Default build options for each core protocol support library, as well as
-# guacamole-server itself (these can be overridden at build time if different
-# options are needed)
-#
-
-ARG FREERDP_OPTS_COMMON="\
-    -DALLOW_IN_SOURCE_BUILD=ON \
-    -DBUILTIN_CHANNELS=OFF \
-    -DWITH_JPEG=ON \
-    -DWITH_OPENH264=ON \
-    -DWITH_GSM=ON \
-    -DWITH_FAAD2=ON \
-    -DWITH_FAAC=ON \
-    -DWITH_GSSAPI=ON \
-    -DWITH_LIBSYSTEMD=OFF"
-
-ARG GUACAMOLE_SERVER_OPTS="\
-    --disable-guaclog"
-
-ARG LIBSSH2_OPTS="\
-    -DBUILD_EXAMPLES=OFF \
-    -DBUILD_SHARED_LIBS=ON"
-
-ARG LIBTELNET_OPTS="\
-    --disable-static \
-    --disable-util"
-
-ARG LIBVNCCLIENT_OPTS=""
-
-ARG LIBWEBSOCKETS_OPTS="\
-    -DDISABLE_WERROR=ON \
-    -DLWS_WITHOUT_SERVER=ON \
-    -DLWS_WITHOUT_TESTAPPS=ON \
-    -DLWS_WITHOUT_TEST_CLIENT=ON \
-    -DLWS_WITHOUT_TEST_PING=ON \
-    -DLWS_WITHOUT_TEST_SERVER=ON \
-    -DLWS_WITHOUT_TEST_SERVER_EXTPOLL=ON \
-    -DLWS_WITH_STATIC=OFF"
-
-# Build guacamole-server and its core protocol library dependencies
-RUN case "${TARGETPLATFORM}" in \
-    "linux/amd64") \
-        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=ON" \
-        ;; \
-    "linux/arm64") \
-        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=OFF" \
-        ;; \
-    "linux/ppc64le") \
-        export FREERDP_OPTS="${FREERDP_OPTS_COMMON} -DWITH_SSE2=OFF" \
-        ;; \
-    *) \
-        export FREERDP_OPTS="${FREERDP_OPTS_COMMON}" \
-        ;; \
-    esac && \
-${BUILD_DIR}/src/guacd-docker/bin/build-all.sh
-
-# Record the packages of all runtime library dependencies
-RUN ${BUILD_DIR}/src/guacd-docker/bin/list-dependencies.sh \
-        ${PREFIX_DIR}/sbin/guacd               \
-        ${PREFIX_DIR}/lib/libguac-client-*.so  \
-        ${PREFIX_DIR}/lib/freerdp2/*guac*.so   \
-        > ${PREFIX_DIR}/DEPENDENCIES
-
+ARG VERSION="1.6.0"
 
 # Use same Alpine version as the base for the runtime image
-FROM alpine:${ALPINE_BASE_IMAGE}
+FROM guacamole/guacd:${VERSION}
 
 ARG PREFIX_DIR=/opt/guacamole
-
+ARG VERSION
 ARG APPLICATION="guacamole"
-ARG BUILD_RFC3339="2023-04-04T13:00:00Z"
+ARG BUILD_RFC3339="2025-07-07T23:00:00Z"
 ARG REVISION="local"
 ARG DESCRIPTION="Fully Packaged and Multi-Arch Guacamole container"
 ARG PACKAGE="flcontainers/guacamole"
-ARG VERSION="1.5.5"
 
 LABEL org.opencontainers.image.ref.name="${PACKAGE}" \
   org.opencontainers.image.created=$BUILD_RFC3339 \
@@ -176,7 +27,6 @@ ENV \
   GUACAMOLE_HOME=/app/guacamole \
   CATALINA_HOME=/opt/tomcat \
   PG_MAJOR=13 \
-  TOMCAT_VER=9.0.105 \
   PGDATA=/config/postgres \
   POSTGRES_USER=guacamole \
   POSTGRES_DB=guacamole_db
@@ -187,10 +37,8 @@ ENV LD_LIBRARY_PATH=${PREFIX_DIR}/lib
 ENV GUACD_LOG_LEVEL=info
 ENV TZ=UTC
 
-# Copy build artifacts into this stage
-COPY --from=builder ${PREFIX_DIR} ${PREFIX_DIR}
-
 # Set working DIR
+USER root
 RUN mkdir -p /config
 RUN mkdir -p ${GUACAMOLE_HOME}/extensions ${GUACAMOLE_HOME}/extensions-available ${GUACAMOLE_HOME}/lib
 RUN mkdir /docker-entrypoint-initdb.d
@@ -218,19 +66,18 @@ RUN apk add --no-cache                \
 
 RUN apk add --no-cache -X https://dl-cdn.alpinelinux.org/alpine/edge/community gosu
 
-# Create a new user guacd
-ARG UID=1000
-ARG GID=1000
-RUN groupadd --gid $GID guacd
-RUN useradd --system --create-home --shell /sbin/nologin --uid $UID --gid $GID guacd
-
 RUN chown guacd:guacd -R ${PREFIX_DIR}
 
-# Install tomcat
-RUN mkdir ${CATALINA_HOME}
-ADD https://dlcdn.apache.org/tomcat/tomcat-9/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz /tmp/
-RUN tar xvzf /tmp/apache-tomcat-${TOMCAT_VER}.tar.gz --strip-components 1 --directory ${CATALINA_HOME}
-RUN chmod +x ${CATALINA_HOME}/bin/*.sh
+# Install tomcat (robust TOMCAT_VER extraction)
+RUN mkdir -p ${CATALINA_HOME} && \
+    export TOMCAT_VER=$(curl -s https://dlcdn.apache.org/tomcat/tomcat-9/ \
+      | grep -Eo 'v9\.[0-9]+\.[0-9]+/' \
+      | sed 's|/||' | sed 's|v||' \
+      | sort -V | tail -n1) && \
+    echo "Latest Tomcat version: $TOMCAT_VER" && \
+    curl -SLo /tmp/apache-tomcat.tar.gz "https://dlcdn.apache.org/tomcat/tomcat-9/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz" && \
+    tar xvzf /tmp/apache-tomcat.tar.gz --strip-components 1 --directory ${CATALINA_HOME} && \
+    chmod +x ${CATALINA_HOME}/bin/*.sh
 
 RUN groupadd tomcat && \
 useradd -s /bin/false -g tomcat -d ${CATALINA_HOME} tomcat
@@ -245,7 +92,7 @@ chmod 777 -R ${CATALINA_HOME}/logs/
 RUN set -x \
   && rm -rf ${CATALINA_HOME}/webapps/ROOT \
   && curl -SLo ${CATALINA_HOME}/webapps/ROOT.war "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-${GUAC_VER}.war" \
-  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.6.2.jar "https://jdbc.postgresql.org/download/postgresql-42.6.2.jar" \
+  && curl -SLo ${GUACAMOLE_HOME}/lib/postgresql-42.7.7.jar "https://jdbc.postgresql.org/download/postgresql-42.7.7.jar" \
   && curl -SLo ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}.tar.gz "http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUAC_VER}/binary/guacamole-auth-jdbc-${GUAC_VER}.tar.gz" \
   && tar -xzf ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}.tar.gz \
   && cp -R ${GUACAMOLE_HOME}/guacamole-auth-jdbc-${GUAC_VER}/postgresql/guacamole-auth-jdbc-postgresql-${GUAC_VER}.jar ${GUACAMOLE_HOME}/extensions/ \
