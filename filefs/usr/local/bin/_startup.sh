@@ -13,6 +13,7 @@ if [ -d "/config/guacamole/" ]; then
   rm -f /config/guacamole/extensions/guacamole-auth-sso-saml-*.jar
   rm -f /config/guacamole/extensions/guacamole-auth-sso-cas-*.jar
   rm -f /config/guacamole/extensions/guacamole-auth-totp-*.jar
+  rm -f /config/guacamole/extensions/guacamole-auth-ban-*.jar
   rm -f /config/guacamole/extensions/guacamole-vault-ksm-*.jar
   rm -f /config/guacamole/extensions/guacamole-history-recording-storage-*.jar
   rm -rf /config/guacamole/extensions-available

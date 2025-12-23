@@ -56,6 +56,7 @@ docker run \
 - auth-sso-saml
 - auth-sso-cas
 - auth-totp
+- auth-ban
 - vault-ksm
 - history-recording-storage
 
