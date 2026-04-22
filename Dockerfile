@@ -91,6 +91,7 @@ RUN set -eux; \
     -DWITH_KRB5=ON \
     -DWITH_MANPAGES=OFF \
     -DWITH_OPENH264=ON \
+    -DWITH_OPENH264_LOADING=ON \
     -DWITH_OPENSSL=ON \
     -DWITH_OPUS=ON \
     -DWITH_OSS=OFF \
@@ -138,13 +139,15 @@ RUN apk add --no-cache                \
         libwebp-dev                   \
         libwebsockets-dev             \
         make                          \
+        openh264-dev                  \
         openssl-dev                   \
         pango-dev                     \
         pkgconf                       \
         pulseaudio-dev                \
         tar                           \
         util-linux-dev                \
-        wget
+        wget                          \
+        x264-dev
 
 RUN set -eux; \
   rm -rf "${BUILD_DIR}"; \
@@ -158,10 +161,10 @@ RUN set -eux; \
     mv "/tmp/guacamole-server-${VERSION}" "${BUILD_DIR}"; \
     cd "${BUILD_DIR}"; \
     sed -i \
-      's/freerdp_settings_set_bool(rdp_settings, FreeRDP_SupportGraphicsPipeline, TRUE);/freerdp_settings_set_bool(rdp_settings, FreeRDP_SupportGraphicsPipeline, TRUE);\n        freerdp_settings_set_bool(rdp_settings, FreeRDP_GfxH264, TRUE);/' \
+      's/freerdp_settings_set_bool(rdp_settings, FreeRDP_SupportGraphicsPipeline, TRUE);/freerdp_settings_set_bool(rdp_settings, FreeRDP_SupportGraphicsPipeline, TRUE);\n        freerdp_settings_set_bool(rdp_settings, FreeRDP_GfxH264, TRUE);\n        freerdp_settings_set_bool(rdp_settings, FreeRDP_GfxAVC444, TRUE);/' \
       "${BUILD_DIR}/src/protocols/rdp/settings.c"; \
     sed -i \
-      's/rdp_settings->SupportGraphicsPipeline = TRUE;/rdp_settings->SupportGraphicsPipeline = TRUE;\n        rdp_settings->GfxH264 = TRUE;/' \
+      's/rdp_settings->SupportGraphicsPipeline = TRUE;/rdp_settings->SupportGraphicsPipeline = TRUE;\n        rdp_settings->GfxH264 = TRUE;\n        rdp_settings->GfxAVC444 = TRUE;/' \
       "${BUILD_DIR}/src/protocols/rdp/settings.c"; \
     ./configure \
       --prefix="${PREFIX_DIR}" \
